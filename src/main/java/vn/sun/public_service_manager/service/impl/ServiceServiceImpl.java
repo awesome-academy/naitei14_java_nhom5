@@ -1,0 +1,67 @@
+package vn.sun.public_service_manager.service.impl;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import vn.sun.public_service_manager.dto.ServiceDTO;
+import vn.sun.public_service_manager.dto.ServicePageResponse;
+import vn.sun.public_service_manager.repository.ServiceRepository;
+import vn.sun.public_service_manager.service.ServiceService;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class ServiceServiceImpl implements ServiceService {
+    
+    @Autowired
+    private ServiceRepository serviceRepository;
+    
+    @Override
+    public ServicePageResponse getAllServices(int page, int size, String sortBy, String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("desc") 
+            ? Sort.by(sortBy).descending() 
+            : Sort.by(sortBy).ascending();
+        
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<vn.sun.public_service_manager.entity.Service> servicePage = serviceRepository.findAll(pageable);
+        
+        return mapToPageResponse(servicePage);
+    }
+    
+    @Override
+    public ServicePageResponse searchByName(String name, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
+        Page<vn.sun.public_service_manager.entity.Service> servicePage = serviceRepository.findByNameContainingIgnoreCase(name, pageable);
+        
+        return mapToPageResponse(servicePage);
+    }
+    
+    @Override
+    public ServiceDTO getServiceById(Long id) {
+        vn.sun.public_service_manager.entity.Service service = serviceRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Service not found with id: " + id));
+        
+        return ServiceDTO.fromEntity(service);
+    }
+    
+    private ServicePageResponse mapToPageResponse(Page<vn.sun.public_service_manager.entity.Service> servicePage) {
+        List<ServiceDTO> serviceDTOs = servicePage.getContent().stream()
+            .map(ServiceDTO::fromEntity)
+            .collect(Collectors.toList());
+        
+        ServicePageResponse response = new ServicePageResponse();
+        response.setContent(serviceDTOs);
+        response.setCurrentPage(servicePage.getNumber());
+        response.setTotalPages(servicePage.getTotalPages());
+        response.setTotalElements(servicePage.getTotalElements());
+        response.setSize(servicePage.getSize());
+        response.setHasNext(servicePage.hasNext());
+        response.setHasPrevious(servicePage.hasPrevious());
+        
+        return response;
+    }
+}

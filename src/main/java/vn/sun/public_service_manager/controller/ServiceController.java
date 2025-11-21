@@ -4,43 +4,47 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import vn.sun.public_service_manager.dto.ServiceTypeDTO;
-import vn.sun.public_service_manager.dto.ServiceTypePageResponse;
-import vn.sun.public_service_manager.service.ServiceTypeService;
+import vn.sun.public_service_manager.dto.ServiceDTO;
+import vn.sun.public_service_manager.dto.ServicePageResponse;
+import vn.sun.public_service_manager.service.ServiceService;
+import vn.sun.public_service_manager.utils.annotation.ApiMessage;
 
 @RestController
-@RequestMapping("/api/service-types")
-public class ServiceTypeController {
+@RequestMapping("/api/v1/services")
+public class ServiceController {
     
     @Autowired
-    private ServiceTypeService serviceTypeService;
+    private ServiceService serviceService;
     
     @GetMapping
-    public ResponseEntity<ServiceTypePageResponse> getAllServiceTypes(
+    @ApiMessage("Lấy danh sách dịch vụ thành công")
+    public ResponseEntity<ServicePageResponse> getAllServices(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
         
-        ServiceTypePageResponse response = serviceTypeService.getAllServiceTypes(page, size, sortBy, sortDir);
+        ServicePageResponse response = serviceService.getAllServices(page, size, sortBy, sortDir);
         return ResponseEntity.ok(response);
     }
     
     @GetMapping("/search")
-    public ResponseEntity<ServiceTypePageResponse> searchServiceTypes(
+    @ApiMessage("Tìm kiếm dịch vụ thành công")
+    public ResponseEntity<ServicePageResponse> searchServices(
             @RequestParam String name,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         
-        ServiceTypePageResponse response = serviceTypeService.searchByName(name, page, size);
+        ServicePageResponse response = serviceService.searchByName(name, page, size);
         return ResponseEntity.ok(response);
     }
     
     @GetMapping("/{id}")
-    public ResponseEntity<?> getServiceTypeById(@PathVariable Long id) {
+    @ApiMessage("Lấy chi tiết dịch vụ thành công")
+    public ResponseEntity<?> getServiceById(@PathVariable Long id) {
         try {
-            ServiceTypeDTO serviceTypeDTO = serviceTypeService.getServiceTypeById(id);
-            return ResponseEntity.ok(serviceTypeDTO);
+            ServiceDTO serviceDTO = serviceService.getServiceById(id);
+            return ResponseEntity.ok(serviceDTO);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(e.getMessage());

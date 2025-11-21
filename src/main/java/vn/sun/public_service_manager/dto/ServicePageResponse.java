@@ -9,9 +9,9 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ServiceTypePageResponse {
+public class ServicePageResponse {
     
-    private List<ServiceTypeDTO> content;
+    private List<ServiceDTO> content;
     private int currentPage;
     private int totalPages;
     private long totalElements;
