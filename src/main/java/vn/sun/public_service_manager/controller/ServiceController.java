@@ -12,33 +12,46 @@ import vn.sun.public_service_manager.utils.annotation.ApiMessage;
 @RestController
 @RequestMapping("/api/v1/services")
 public class ServiceController {
-    
+
     @Autowired
     private ServiceService serviceService;
-    
+
     @GetMapping
     @ApiMessage("Lấy danh sách dịch vụ thành công")
     public ResponseEntity<ServicePageResponse> getAllServices(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir) {
-        
-        ServicePageResponse response = serviceService.getAllServices(page, size, sortBy, sortDir);
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String keyword) {
+
+        ServicePageResponse response = serviceService.getAllServices(page, size, sortBy, sortDir, keyword);
         return ResponseEntity.ok(response);
     }
-    
-    @GetMapping("/search")
-    @ApiMessage("Tìm kiếm dịch vụ thành công")
-    public ResponseEntity<ServicePageResponse> searchServices(
-            @RequestParam String name,
+
+    // @GetMapping("/search")
+    // @ApiMessage("Tìm kiếm dịch vụ thành công")
+    // public ResponseEntity<ServicePageResponse> searchServices(
+    // @RequestParam String keyword,
+    // @RequestParam(defaultValue = "0") int page,
+    // @RequestParam(defaultValue = "10") int size) {
+
+    // ServicePageResponse response = serviceService.searchByKeyword(keyword, page,
+    // size);
+    // return ResponseEntity.ok(response);
+    // }
+
+    @GetMapping("/service-type/{serviceTypeId}")
+    @ApiMessage("Lấy danh sách dịch vụ theo loại dịch vụ thành công")
+    public ResponseEntity<ServicePageResponse> getServicesByServiceType(
+            @PathVariable Long serviceTypeId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        
-        ServicePageResponse response = serviceService.searchByName(name, page, size);
+
+        ServicePageResponse response = serviceService.searchByServiceType(serviceTypeId, page, size);
         return ResponseEntity.ok(response);
     }
-    
+
     @GetMapping("/{id}")
     @ApiMessage("Lấy chi tiết dịch vụ thành công")
     public ResponseEntity<?> getServiceById(@PathVariable Long id) {
@@ -47,7 +60,7 @@ public class ServiceController {
             return ResponseEntity.ok(serviceDTO);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(e.getMessage());
+                    .body(e.getMessage());
         }
     }
 }
