@@ -34,7 +34,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         // API Auth cho Citizen
-                        .requestMatchers("/api/citizen/auth/**").permitAll()
+                        .requestMatchers("/api/v1/citizen/auth/**").permitAll()
                         // Yêu cầu xác thực cho tất cả các API khác
                         .anyRequest().authenticated()
                 )
