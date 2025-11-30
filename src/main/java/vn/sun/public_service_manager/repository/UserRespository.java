@@ -10,4 +10,5 @@ import vn.sun.public_service_manager.entity.User;
 @Repository
 public interface UserRespository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
+    Optional<User> findByUsername(String username);
 }

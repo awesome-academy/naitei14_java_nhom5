@@ -36,6 +36,10 @@ public class User {
     @JoinColumn(name = "department_id", referencedColumnName = "id")
     private Department department;
     
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.STAFF;
+    
     @Column(nullable = false)
     private Boolean active = true;
     

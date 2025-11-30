@@ -35,11 +35,23 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // API Auth cho Citizen
                         .requestMatchers("/api/citizen/auth/**", "/static/**").permitAll()
+                        // Admin MVC routes
+                        .requestMatchers("/admin/login", "/admin/logout").permitAll()
                         // Yêu cầu xác thực cho tất cả các API khác
                         .anyRequest().authenticated())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .formLogin(form -> form
+                        .loginPage("/admin/login")
+                        .loginProcessingUrl("/admin/login")
+                        .defaultSuccessUrl("/admin/dashboard", true)
+                        .failureUrl("/admin/login?error")
+                        .permitAll())
+                .logout(logout -> logout
+                        .logoutUrl("/admin/logout")
+                        .logoutSuccessUrl("/admin/login?logout")
+                        .permitAll());
 
         return http.build();
     }
