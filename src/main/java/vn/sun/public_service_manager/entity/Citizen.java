@@ -52,4 +52,6 @@ public class Citizen {
     @Column(name = "updated_at", insertable = false, updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
+
+
 }

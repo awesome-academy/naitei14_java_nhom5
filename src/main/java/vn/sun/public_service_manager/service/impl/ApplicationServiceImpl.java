@@ -1,18 +1,19 @@
 package vn.sun.public_service_manager.service.impl;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import vn.sun.public_service_manager.dto.ApplicationDTO;
 import vn.sun.public_service_manager.dto.response.ApplicationResDTO;
 import vn.sun.public_service_manager.entity.Application;
 import vn.sun.public_service_manager.entity.ApplicationDocument;
 import vn.sun.public_service_manager.entity.ApplicationStatus;
+import vn.sun.public_service_manager.entity.Citizen;
 import vn.sun.public_service_manager.exception.ResourceNotFoundException;
-import vn.sun.public_service_manager.repository.ApplicationDocumentRepository;
-import vn.sun.public_service_manager.repository.ApplicationRepository;
-import vn.sun.public_service_manager.repository.ApplicationStatusRepository;
-import vn.sun.public_service_manager.repository.ServiceRepository;
+import vn.sun.public_service_manager.repository.*;
 import vn.sun.public_service_manager.service.ApplicationService;
 import vn.sun.public_service_manager.utils.constant.StatusEnum;
 import vn.sun.public_service_manager.utils.constant.UploadType;
@@ -23,16 +24,18 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final ServiceRepository serviceRepository;
     private final ApplicationStatusRepository applicationStatusRepository;
     private final ApplicationDocumentRepository applicationDocumentRepository;
+    private final CitizenRepository citizenRepository;
 
     public ApplicationServiceImpl(
             ApplicationRepository applicationRepository,
             ServiceRepository serviceRepository,
             ApplicationStatusRepository applicationStatusRepository,
-            ApplicationDocumentRepository applicationDocumentRepository) {
+            ApplicationDocumentRepository applicationDocumentRepository, CitizenRepository citizenRepository) {
         this.applicationRepository = applicationRepository;
         this.serviceRepository = serviceRepository;
         this.applicationStatusRepository = applicationStatusRepository;
         this.applicationDocumentRepository = applicationDocumentRepository;
+        this.citizenRepository = citizenRepository;
     }
 
     @Transactional
@@ -127,5 +130,21 @@ public class ApplicationServiceImpl implements ApplicationService {
             }).toList());
         }
         return dto;
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ApplicationDTO> getApplicationsByCitizen(String nationalId, Pageable pageable) {
+
+        // 1. Tìm Entity Citizen để lấy ID (citizen_id)
+        Citizen citizen = citizenRepository.findByNationalId(nationalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Citizen", "National ID", nationalId));
+
+        Long citizenId = citizen.getId();
+
+        // 2. Truy vấn cơ sở dữ liệu với phân trang và lọc theo citizenId
+        Page<Application> applicationPage = applicationRepository.findByCitizenId(citizenId, pageable);
+
+        // 3. Chuyển đổi Page<Application> sang Page<ApplicationDTO>
+        return applicationPage.map(ApplicationDTO::fromEntity);
     }
 }
