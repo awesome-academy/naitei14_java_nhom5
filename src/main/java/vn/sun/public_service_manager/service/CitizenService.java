@@ -22,4 +22,6 @@ public interface CitizenService {
 
     Citizen save(Citizen citizen);
 
+    void deleteById(Long id);
+
 }

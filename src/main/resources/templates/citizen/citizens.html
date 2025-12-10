@@ -62,7 +62,7 @@
                                         <i class="bi bi-search"></i>
                                     </span>
                                     <input type="text" class="form-control" name="keyword" th:value="${keyword}"
-                                        placeholder="Tìm kiếm theo tên, CCCD, email, số điện thoại..." autofocus>
+                                        placeholder="Tìm kiếm theo tên, CCCD, email, số điện thoại...">
                                 </div>
                             </div>
                             <div class="col-md-2">
@@ -157,14 +157,17 @@
                                                     th:onclick="'viewCitizen(' + ${citizen.id} + ')'">
                                                     <i class="bi bi-eye"></i>
                                                 </button>
-                                                <button class="btn btn-outline-primary" data-bs-toggle="tooltip"
-                                                    title="Chỉnh sửa" th:onclick="'editCitizen(' + ${citizen.id} + ')'">
+                                                <a class="btn btn-outline-primary" data-bs-toggle="tooltip"
+                                                    title="Chỉnh sửa"
+                                                    th:href="@{'/admin/citizens/' + ${citizen.id} + '/edit'}">
                                                     <i class="bi bi-pencil"></i>
-                                                </button>
-                                                <button class="btn btn-outline-danger" data-bs-toggle="tooltip"
-                                                    title="Xóa" th:onclick="'deleteCitizen(' + ${citizen.id} + ')'">
+                                                </a>
+                                                <a th:href="@{'/admin/citizens/' + ${citizen.id} + '/delete'}"
+                                                    class="btn btn-outline-danger" data-bs-toggle="tooltip" title="Xóa"
+                                                    th:data-confirm-delete="|Are you sure you want to delete this citizen ${citizen.fullName}?|"
+                                                    onclick="if (!confirm(this.getAttribute('data-confirm-delete'))) return false">
                                                     <i class="bi bi-trash"></i>
-                                                </button>
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>
@@ -184,7 +187,7 @@
                                     th:classappend="${i == currentPage} ? 'active'">
                                     <a class="page-link" th:href="@{/admin/citizens(page=${i})}" th:text="${i}">1</a>
                                 </li>
-                                <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                                <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
                                     <a class="page-link" th:href="@{/admin/citizens(page=${currentPage + 1})}">
                                         <i class="bi bi-chevron-right"></i>
                                     </a>
@@ -252,21 +255,6 @@
                 $('#editStatus').val(data.status);
                 $('#editCitizenModal').modal('show');
             });
-        }
-
-        function deleteCitizen(id) {
-            if (confirm('Bạn có chắc chắn muốn xóa công dân này?')) {
-                $.ajax({
-                    url: '/admin/citizens/' + id,
-                    type: 'DELETE',
-                    success: function (result) {
-                        location.reload();
-                    },
-                    error: function (err) {
-                        alert('Có lỗi xảy ra!');
-                    }
-                });
-            }
         }
     </script>
 

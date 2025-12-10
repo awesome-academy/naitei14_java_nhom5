@@ -55,7 +55,6 @@ public class Citizen {
     private String email;
 
     @Column(name = "password", nullable = false, length = 255)
-    @NotBlank(message = "Mật khẩu không được để trống")
     private String password; // Mật khẩu đã được mã hóa
 
     @Column(name = "created_at", insertable = false, updatable = false)

@@ -29,12 +29,14 @@
                 <div class="card">
                     <div class="card-header bg-primary text-white">
                         <h5 class="mb-0">
-                            <i class="bi bi-person-plus"></i> Thêm công dân mới
+                            <i class="bi"
+                                th:classappend="${citizen.id == null} ? 'bi-person-plus' : 'bi-pencil-square'"></i>
+                            <span th:text="${citizen.id == null} ? 'Thêm công dân mới' : 'Cập nhật công dân'"></span>
                         </h5>
                     </div>
                     <div class="card-body">
                         <form th:action="@{/admin/citizens/save}" th:object="${citizen}" method="post">
-                            <input type="hidden" th:field="*{id}">
+                            <input type="hidden" th:field="*{id}" />
                             <div class="row g-3">
                                 <!-- Họ và tên -->
                                 <div class="col-md-6">
@@ -49,6 +51,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label">CCCD/CMND <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" th:field="*{nationalId}"
+                                        th:readonly="${citizen.id != null}"
                                         th:classappend="${#fields.hasErrors('nationalId')} ? 'is-invalid' : ''"
                                         required>
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('nationalId')}"
@@ -59,6 +62,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Email <span class="text-danger">*</span></label>
                                     <input type="email" class="form-control" th:field="*{email}"
+                                        th:readonly="${citizen.id != null}"
                                         th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''" required>
                                     <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}"
                                         th:errors="*{email}">
@@ -106,7 +110,7 @@
                                 </div>
 
                                 <!-- Password -->
-                                <div class="col-md-6">
+                                <div class="col-md-6" th:if="${citizen.id == null}">
                                     <label class="form-label">Password <span class="text-danger">*</span></label>
                                     <input type="password" class="form-control" th:field="*{password}"
                                         th:classappend="${#fields.hasErrors('password')} ? 'is-invalid' : ''" required>
