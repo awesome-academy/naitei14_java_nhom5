@@ -34,9 +34,13 @@
                                 data-bs-target="#createUserModal">
                                 <i class="bi bi-plus-circle"></i> Thêm người dùng
                             </button>
-                            <a href="/admin/dashboard" class="btn btn-light btn-sm">
-                                <i class="bi bi-arrow-left"></i> Quay lại Dashboard
+                            <a href="/api/v1/admin/users/export" class="btn btn-light btn-sm">
+                                <i class="bi bi-arrow-left"></i> Export Csv
                             </a>
+                            <button class="btn btn-warning btn-sm me-2" data-bs-toggle="modal"
+                                data-bs-target="#importStaffModal">
+                                <i class="bi bi-file-earmark-arrow-up"></i> Import CSV
+                            </button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -305,6 +309,80 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                     <button type="button" class="btn btn-warning" onclick="updateUser()">
                         <i class="bi bi-save"></i> Cập nhật
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Staff Modal -->
+    <div class="modal fade" id="importStaffModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-file-earmark-arrow-up"></i> Import Danh Sách Staff
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Instructions -->
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading"><i class="bi bi-info-circle"></i> Hướng dẫn Import CSV:</h6>
+                        <ul class="mb-2">
+                            <li><strong>Định dạng:</strong>
+                                <code>username,email,phone,address,departmentId</code>
+                            </li>
+                            <li><strong>username</strong>: Tên đăng nhập (bắt buộc, ít nhất 3 ký tự, duy nhất)</li>
+                            <li><strong>email</strong>: Email (bắt buộc, định dạng hợp lệ, duy nhất)</li>
+                            <li><strong>phone</strong>: Số điện thoại (bắt buộc, 10-11 chữ số)</li>
+                            <li><strong>address</strong>: Địa chỉ (không bắt buộc, nếu có dấu phẩy thì đặt trong dấu
+                                ngoặc kép)</li>
+                            <li><strong>departmentId</strong>: ID phòng ban (không bắt buộc, để trống nếu không có)</li>
+                        </ul>
+                        <div class="alert alert-warning mb-0">
+                            <strong>Lưu ý:</strong>
+                            <ul class="mb-0">
+                                <li>File phải có encoding <strong>UTF-8</strong></li>
+                                <li>Địa chỉ có dấu phẩy phải đặt trong dấu ngoặc kép:
+                                    <code>"123 Nguyen Trai, District 1"</code>
+                                </li>
+                                <li>DepartmentId phải là số nguyên hợp lệ hoặc để trống</li>
+                                <li><strong>Mật khẩu mặc định:</strong> <code>username@123</code> (VD: nguyenvana@123)
+                                </li>
+                                <li>Vai trò mặc định: <span class="badge bg-primary">Staff</span></li>
+                                <li>Tài khoản mặc định: <span class="badge bg-success">Active</span></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- File Upload -->
+                    <form id="importStaffForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label">Chọn file CSV <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control" id="csvFileInput" accept=".csv" required>
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle"></i> Chỉ chấp nhận file .csv với encoding UTF-8
+                            </small>
+                        </div>
+                    </form>
+
+                    <!-- Download Template -->
+                    <div class="mb-3">
+                        <button onclick="downloadTemplate()" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-download"></i> Tải file mẫu
+                        </button>
+                    </div>
+
+                    <!-- Import Result -->
+                    <div id="importResultAlert" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Đóng
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="importStaffFromCsv()">
+                        <i class="bi bi-upload"></i> Import
                     </button>
                 </div>
             </div>
@@ -825,6 +903,205 @@
                     alert(error.message);
                 });
         }
+
+        // Import staff from CSV
+        function importStaffFromCsv() {
+            const fileInput = document.getElementById('csvFileInput');
+            const file = fileInput.files[0];
+            const resultAlert = document.getElementById('importResultAlert');
+
+            // Validate file selected
+            if (!file) {
+                alert('Vui lòng chọn file!');
+                return;
+            }
+
+            // Validate file type
+            if (!file.name.endsWith('.csv')) {
+                alert('Chỉ chấp nhận file CSV!');
+                return;
+            }
+
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File không được vượt quá 5MB!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Show loading
+            resultAlert.innerHTML = `
+        <div class="alert alert-info">
+            <div class="spinner-border spinner-border-sm me-2" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <strong>Đang xử lý file...</strong> Vui lòng đợi.
+        </div>`;
+            resultAlert.style.display = 'block';
+
+            // Disable import button
+            const importBtn = event.target;
+            importBtn.disabled = true;
+            importBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang import...';
+
+            fetch('/api/v1/admin/users/import', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.message || 'Có lỗi xảy ra khi import!');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Import result:', data);
+
+                    let alertClass = 'success';
+                    let icon = 'check-circle-fill';
+                    let title = 'Import thành công!';
+
+                    // Build result message
+                    let message = `
+            <h6><strong>${title}</strong></h6>
+            <div class="row text-start">
+                <div class="col-4">
+                    <div class="card border-primary">
+                        <div class="card-body text-center">
+                            <h4 class="text-primary mb-0">${data.total || 0}</h4>
+                            <small class="text-muted">Tổng số</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="card border-success">
+                        <div class="card-body text-center">
+                            <h4 class="text-success mb-0">${data.success || 0}</h4>
+                            <small class="text-muted">Thành công</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="card border-danger">
+                        <div class="card-body text-center">
+                            <h4 class="text-danger mb-0">${data.failed || 0}</h4>
+                            <small class="text-muted">Thất bại</small>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+                    // Show errors if any
+                    if (data.errors && data.errors.length > 0) {
+                        alertClass = data.success > 0 ? 'warning' : 'danger';
+                        icon = 'exclamation-triangle-fill';
+                        title = data.success > 0 ? 'Import hoàn tất với một số lỗi' : 'Import thất bại';
+
+                        message += `
+                <hr>
+                <h6 class="text-danger"><i class="bi bi-exclamation-triangle"></i> Chi tiết lỗi:</h6>
+                <div class="alert alert-danger mb-0" style="max-height: 200px; overflow-y: auto;">
+                    <ol class="mb-0">`;
+
+                        data.errors.slice(0, 20).forEach(err => {
+                            message += `<li class="small">${err}</li>`;
+                        });
+
+                        if (data.errors.length > 20) {
+                            message += `<li class="text-muted"><em>... và ${data.errors.length - 20} lỗi khác</em></li>`;
+                        }
+
+                        message += `</ol></div>`;
+                    }
+
+                    // Show success messages
+                    if (data.successMessages && data.successMessages.length > 0 && data.successMessages.length <= 10) {
+                        message += `
+                <hr>
+                <h6 class="text-success"><i class="bi bi-check-circle"></i> Danh sách thành công:</h6>
+                <div class="alert alert-success mb-0">
+                    <ol class="mb-0">`;
+
+                        data.successMessages.forEach(msg => {
+                            message += `<li class="small">${msg}</li>`;
+                        });
+
+                        message += `</ol></div>`;
+                    }
+
+                    resultAlert.innerHTML = `
+            <div class="alert alert-${alertClass}">
+                <i class="bi bi-${icon}"></i> ${message}
+            </div>`;
+
+                    // Reset form
+                    document.getElementById('importStaffForm').reset();
+
+                    // Reload users if any success
+                    if (data.success > 0) {
+                        setTimeout(() => {
+                            loadUsers(0);
+                        }, 2000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Import error:', error);
+                    resultAlert.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-x-circle-fill"></i> 
+                <h6><strong>Có lỗi xảy ra!</strong></h6>
+                <p class="mb-0">${error.message}</p>
+            </div>`;
+                })
+                .finally(() => {
+                    // Re-enable import button
+                    importBtn.disabled = false;
+                    importBtn.innerHTML = '<i class="bi bi-upload"></i> Import';
+                });
+        }
+
+        // Download CSV template
+        // Download CSV template
+        function downloadTemplate() {
+            const csvContent =
+                `username,email,phone,address,departmentId
+nguyenvana,nguyenvana@company.com,0123456789,"123 Nguyen Trai St, District 1",1
+tranthib,tranthib@company.com,0987654321,"456 Le Loi St, District 3",2
+levanc,levanc@company.com,0369852147,"789 Tran Hung Dao St, District 5",1
+phamthid,phamthid@company.com,0912345678,"456 Hai Ba Trung St",
+hoangvane,hoangvane@company.com,0901234567,"789 Le Loi St, District 1",2`;
+
+            // Create blob with UTF-8 BOM
+            const blob = new Blob(['\ufeff' + csvContent], {
+                type: 'text/csv;charset=utf-8;'
+            });
+
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+
+            link.setAttribute("href", url);
+            link.setAttribute("download", "staff_import_template.csv");
+            link.style.visibility = 'hidden';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Show success message
+            setTimeout(() => {
+                alert('✓ File mẫu đã được tải xuống!');
+            }, 100);
+        }
+        // Clear import modal when closed
+        document.getElementById('importStaffModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('importStaffForm').reset();
+            document.getElementById('importResultAlert').style.display = 'none';
+        });
+
     </script>
 </body>
 
