@@ -1,29 +1,35 @@
 package vn.sun.public_service_manager.service.impl;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.opencsv.CSVParser;
-import com.opencsv.CSVParserBuilder;
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
-
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import vn.sun.public_service_manager.dto.UserCreateDTO;
 import vn.sun.public_service_manager.dto.UserFilterDTO;
 import vn.sun.public_service_manager.dto.UserListDTO;
@@ -37,18 +43,6 @@ import vn.sun.public_service_manager.repository.DepartmentRepository;
 import vn.sun.public_service_manager.repository.RoleRepository;
 import vn.sun.public_service_manager.repository.UserRespository;
 import vn.sun.public_service_manager.service.UserManagementService;
-
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -327,6 +321,30 @@ public class UserManagementServiceImpl implements UserManagementService {
         } else {
             throw new RuntimeException("Chỉ hỗ trợ khóa/mở khóa USER");
         }
+    }
+
+    @Override
+    public List<UserListDTO> getAllUsersForSelection() {
+        List<User> users = userRepository.findAll(Sort.by(Sort.Direction.ASC, "username"));
+        return users.stream()
+                .map(user -> UserListDTO.builder()
+                        .id(user.getId())
+                        .username(user.getUsername())
+                        .email(user.getEmail())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UserListDTO> getUsersByDepartmentId(Long departmentId) {
+        List<User> users = userRepository.findWithFilters(null, true, null, departmentId, Pageable.unpaged()).getContent();
+        return users.stream()
+                .map(user -> UserListDTO.builder()
+                        .id(user.getId())
+                        .username(user.getUsername())
+                        .email(user.getEmail())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     @Override

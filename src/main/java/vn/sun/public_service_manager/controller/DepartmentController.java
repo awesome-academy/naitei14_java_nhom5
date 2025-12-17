@@ -1,20 +1,31 @@
 package vn.sun.public_service_manager.controller;
 
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import lombok.RequiredArgsConstructor;
 import vn.sun.public_service_manager.dto.DepartmentDTO;
 import vn.sun.public_service_manager.entity.Department;
+import vn.sun.public_service_manager.entity.User;
 import vn.sun.public_service_manager.repository.DepartmentRepository;
+import vn.sun.public_service_manager.repository.UserRespository;
 import vn.sun.public_service_manager.utils.annotation.ApiMessage;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/admin/departments")
@@ -22,6 +33,7 @@ import java.util.stream.Collectors;
 public class DepartmentController {
 
     private final DepartmentRepository departmentRepository;
+    private final UserRespository userRespository;
 
     @GetMapping
     @ApiMessage("Lấy danh sách phòng ban thành công")
@@ -43,6 +55,8 @@ public class DepartmentController {
                 .code(dept.getCode())
                 .name(dept.getName())
                 .address(dept.getAddress())
+                .leaderId(dept.getLeader() != null ? dept.getLeader().getId() : null)
+                .leaderName(dept.getLeader() != null ? dept.getLeader().getUsername() : null)
                 .build());
         
         return ResponseEntity.ok(dtoPage);
@@ -58,6 +72,8 @@ public class DepartmentController {
                         .code(dept.getCode())
                         .name(dept.getName())
                         .address(dept.getAddress())
+                        .leaderId(dept.getLeader() != null ? dept.getLeader().getId() : null)
+                        .leaderName(dept.getLeader() != null ? dept.getLeader().getUsername() : null)
                         .build())
                 .collect(Collectors.toList());
         return ResponseEntity.ok(departments);
@@ -74,6 +90,8 @@ public class DepartmentController {
                 .code(dept.getCode())
                 .name(dept.getName())
                 .address(dept.getAddress())
+                .leaderId(dept.getLeader() != null ? dept.getLeader().getId() : null)
+                .leaderName(dept.getLeader() != null ? dept.getLeader().getUsername() : null)
                 .build();
         
         return ResponseEntity.ok(dto);
@@ -91,6 +109,13 @@ public class DepartmentController {
         dept.setCode(dto.getCode());
         dept.setName(dto.getName());
         dept.setAddress(dto.getAddress());
+        
+        // Set leader if provided
+        if (dto.getLeaderId() != null) {
+            User leader = userRespository.findById(dto.getLeaderId())
+                    .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+            dept.setLeader(leader);
+        }
         
         Department saved = departmentRepository.save(dept);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved.getId());
@@ -113,6 +138,15 @@ public class DepartmentController {
         dept.setCode(dto.getCode());
         dept.setName(dto.getName());
         dept.setAddress(dto.getAddress());
+        
+        // Update leader
+        if (dto.getLeaderId() != null) {
+            User leader = userRespository.findById(dto.getLeaderId())
+                    .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+            dept.setLeader(leader);
+        } else {
+            dept.setLeader(null);
+        }
         
         departmentRepository.save(dept);
         return ResponseEntity.ok().build();

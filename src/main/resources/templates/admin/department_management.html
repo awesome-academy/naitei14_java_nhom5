@@ -52,6 +52,7 @@
                                         <th>ID</th>
                                         <th>Mã phòng ban</th>
                                         <th>Tên phòng ban</th>
+                                        <th>Trưởng phòng</th>
                                         <th>Địa chỉ</th>
                                         <th>Thao tác</th>
                                     </tr>
@@ -105,6 +106,12 @@
                             <div class="invalid-feedback" id="nameError"></div>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">Trưởng phòng</label>
+                            <select class="form-select" id="leaderId">
+                                <option value="">Chọn trưởng phòng</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Địa chỉ</label>
                             <input type="text" class="form-control" id="address" placeholder="Tầng 3, Tòa nhà A">
                         </div>
@@ -143,6 +150,12 @@
                             <div class="invalid-feedback" id="editNameError"></div>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">Trưởng phòng</label>
+                            <select class="form-select" id="editLeaderId">
+                                <option value="">Chọn trưởng phòng</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Địa chỉ</label>
                             <input type="text" class="form-control" id="editAddress">
                         </div>
@@ -166,6 +179,7 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             loadDepartments();
+            loadUsers();
         });
 
         function loadDepartments(page = 0) {
@@ -213,7 +227,7 @@
             tbody.innerHTML = '';
 
             if (!departments || departments.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center">Không có dữ liệu</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Không có dữ liệu</td></tr>';
                 return;
             }
 
@@ -223,6 +237,7 @@
                     <td>${dept.id}</td>
                     <td><strong>${dept.code || '-'}</strong></td>
                     <td>${dept.name || '-'}</td>
+                    <td>${dept.leaderName ? '<span class="badge bg-primary">' + dept.leaderName + '</span>' : '<span class="text-muted">Chưa có</span>'}</td>
                     <td>${dept.address || '-'}</td>
                     <td>
                         <button class="btn btn-sm btn-warning me-1" onclick="openEditModal(${dept.id})" title="Sửa">
@@ -295,13 +310,55 @@
             }
         }
 
+        function loadUsers() {
+            fetch('/api/v1/admin/users/all')
+                .then(response => response.json())
+                .then(data => {
+                    const users = data.data || data;
+                    const createSelect = document.getElementById('leaderId');
+                    
+                    createSelect.innerHTML = '<option value="">Chọn trưởng phòng</option>';
+                    users.forEach(user => {
+                        const option = document.createElement('option');
+                        option.value = user.id;
+                        option.textContent = user.username;
+                        createSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error loading users:', error));
+        }
+
+        function loadUsersByDepartment(departmentId) {
+            return fetch(`/api/v1/admin/users/by-department/${departmentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const users = data.data || data;
+                    const editSelect = document.getElementById('editLeaderId');
+                    
+                    editSelect.innerHTML = '<option value="">Chọn trưởng phòng</option>';
+                    users.forEach(user => {
+                        const option = document.createElement('option');
+                        option.value = user.id;
+                        option.textContent = user.username;
+                        editSelect.appendChild(option);
+                    });
+                    return users;
+                })
+                .catch(error => {
+                    console.error('Error loading users by department:', error);
+                    return [];
+                });
+        }
+
         function createDepartment() {
             clearValidationErrors();
 
+            const leaderId = document.getElementById('leaderId').value;
             const data = {
                 code: document.getElementById('code').value.trim(),
                 name: document.getElementById('name').value.trim(),
-                address: document.getElementById('address').value.trim()
+                address: document.getElementById('address').value.trim(),
+                leaderId: leaderId ? parseInt(leaderId) : null
             };
 
             let hasError = false;
@@ -363,6 +420,11 @@
                     document.getElementById('editName').value = dept.name || '';
                     document.getElementById('editAddress').value = dept.address || '';
                     
+                    // Load users theo department ID, sau đó set giá trị leader
+                    loadUsersByDepartment(dept.id).then(() => {
+                        document.getElementById('editLeaderId').value = dept.leaderId || '';
+                    });
+                    
                     clearValidationErrors();
                     
                     const modal = new bootstrap.Modal(document.getElementById('editDepartmentModal'));
@@ -377,10 +439,12 @@
             clearValidationErrors();
 
             const deptId = document.getElementById('editDepartmentId').value;
+            const leaderId = document.getElementById('editLeaderId').value;
             const data = {
                 code: document.getElementById('editCode').value.trim(),
                 name: document.getElementById('editName').value.trim(),
-                address: document.getElementById('editAddress').value.trim()
+                address: document.getElementById('editAddress').value.trim(),
+                leaderId: leaderId ? parseInt(leaderId) : null
             };
 
             let hasError = false;

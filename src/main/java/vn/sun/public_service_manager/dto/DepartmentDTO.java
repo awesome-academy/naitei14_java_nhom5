@@ -14,4 +14,6 @@ public class DepartmentDTO {
     private String code;
     private String name;
     private String address;
+    private Long leaderId;
+    private String leaderName;
 }

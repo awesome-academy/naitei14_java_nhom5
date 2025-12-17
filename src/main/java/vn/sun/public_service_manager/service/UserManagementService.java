@@ -23,6 +23,21 @@ public interface UserManagementService {
     Page<UserListDTO> getAllUsers(UserFilterDTO filter, Pageable pageable);
 
     /**
+     * Lấy danh sách tất cả users (không phân trang) để hiển thị trong dropdown
+     * 
+     * @return List<UserListDTO> - Danh sách tất cả users
+     */
+    java.util.List<UserListDTO> getAllUsersForSelection();
+
+    /**
+     * Lấy danh sách users theo phòng ban để hiển thị trong dropdown
+     * 
+     * @param departmentId - ID của phòng ban
+     * @return List<UserListDTO> - Danh sách users thuộc phòng ban
+     */
+    java.util.List<UserListDTO> getUsersByDepartmentId(Long departmentId);
+
+    /**
      * Lấy thông tin chi tiết một người dùng
      * 
      * @param id   - ID của người dùng

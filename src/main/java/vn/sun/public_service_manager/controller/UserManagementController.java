@@ -10,9 +10,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -105,6 +105,23 @@ public class UserManagementController {
             @RequestParam String type) {
         userManagementService.deleteUser(id, type);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ApiMessage("Lấy danh sách tất cả người dùng cho dropdown")
+    public ResponseEntity<java.util.List<UserListDTO>> getAllUsersForSelection() {
+        java.util.List<UserListDTO> users = userManagementService.getAllUsersForSelection();
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/by-department/{departmentId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ApiMessage("Lấy danh sách người dùng theo phòng ban")
+    public ResponseEntity<java.util.List<UserListDTO>> getUsersByDepartment(
+            @PathVariable Long departmentId) {
+        java.util.List<UserListDTO> users = userManagementService.getUsersByDepartmentId(departmentId);
+        return ResponseEntity.ok(users);
     }
 
     @PatchMapping("/{id}/toggle-active")
