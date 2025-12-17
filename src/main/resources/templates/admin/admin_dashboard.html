@@ -1,12 +1,10 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-
-<!-- Include Head Fragment -->
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 
 <head th:replace="~{layout/layout_fragment :: head('Admin Dashboard')}"></head>
 
 <body class="d-flex flex-column min-vh-100">
-
     <!-- Include Admin Header -->
     <div th:replace="~{layout/layout_fragment :: admin-header}"></div>
 
@@ -22,142 +20,284 @@
                 <!-- Page Header -->
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <h2 class="h4 mb-1">Dashboard - Tổng quan hệ thống</h2>
-                        <nav aria-label="breadcrumb">
-                            <ol class="breadcrumb mb-0">
-                                <li class="breadcrumb-item"><a href="#" th:href="@{/admin/dashboard}">Home</a></li>
-                                <li class="breadcrumb-item active">Dashboard</li>
-                            </ol>
-                        </nav>
+                        <h2 class="h4 mb-1">
+                            <i class="bi bi-speedometer2 text-primary"></i> Dashboard
+                        </h2>
+                        <p class="text-muted mb-0">Tổng quan hệ thống quản lý dịch vụ công</p>
                     </div>
                     <div>
-                        <span class="badge bg-primary">
+                        <span class="badge bg-primary bg-gradient px-3 py-2">
                             <i class="bi bi-person-badge"></i>
                             <span th:text="${roles}">ROLE_ADMIN</span>
                         </span>
                     </div>
-                    <div class="card-body">
-                        <p>Chào mừng Admin đến với trang quản trị!</p>
-                        <p>Vai trò của bạn: <span th:text="${roles}"></span></p>
-                        <div class="row">
-                            <div class="col-md-4">
-                                <a href="/admin/users" class="text-decoration-none">
-                                    <div class="card text-white bg-success mb-3">
-                                        <div class="card-body">
-                                            <h5 class="card-title"><i class="bi bi-people-fill"></i> Quản lý người dùng</h5>
-                                            <p class="card-text">Xem danh sách, thêm, sửa, xóa tài khoản admin và staff</p>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+                </div>
 
-                    <div class="col-xl-3 col-md-6">
-                        <div class="card card-stats border-0 shadow-sm">
-                            <div class="card-body">
-                                <div class="row align-items-center">
-                                    <div class="col">
-                                        <span class="text-muted text-uppercase small fw-bold">Hồ sơ</span>
-                                        <h3 class="mb-0 mt-2">456</h3>
-                                    </div>
-                                    <div class="col-auto">
-                                        <div class="icon bg-success bg-gradient text-white rounded-circle p-3">
-                                            <i class="bi bi-file-earmark-text fs-4"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p class="mt-3 mb-0 text-muted small">
-                                    <span class="text-success me-1"><i class="bi bi-arrow-up"></i> 8%</span>
-                                    <span>So với tháng trước</span>
+                <!-- Welcome Card -->
+                <div class="card border-0 shadow-sm mb-4 bg-gradient"
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="card-body text-black p-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h3 class="mb-2">
+                                    <i class="bi bi-emoji-smile"></i>
+                                    Chào mừng trở lại!
+                                </h3>
+                                <p class="mb-0 opacity-75">
+                                    Bạn đang đăng nhập với vai trò:
+                                    <strong class="badge bg-white text-primary" th:text="${roles}">ADMIN</strong>
+                                </p>
+                                <p class="mb-0 mt-2 small opacity-75">
+                                    <i class="bi bi-calendar-check"></i>
+                                    Hôm nay: <span
+                                        th:text="${#temporals.format(#temporals.createNow(), 'dd/MM/yyyy')}"></span>
                                 </p>
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="col-xl-3 col-md-6">
-                        <div class="card card-stats border-0 shadow-sm">
-                            <div class="card-body">
-                                <div class="row align-items-center">
-                                    <div class="col">
-                                        <span class="text-muted text-uppercase small fw-bold">Đang xử lý</span>
-                                        <h3 class="mb-0 mt-2">89</h3>
-                                    </div>
-                                    <div class="col-auto">
-                                        <div class="icon bg-warning bg-gradient text-white rounded-circle p-3">
-                                            <i class="bi bi-hourglass-split fs-4"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p class="mt-3 mb-0 text-muted small">
-                                    <span class="text-danger me-1"><i class="bi bi-arrow-down"></i> 3%</span>
-                                    <span>So với tháng trước</span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-xl-3 col-md-6">
-                        <div class="card card-stats border-0 shadow-sm">
-                            <div class="card-body">
-                                <div class="row align-items-center">
-                                    <div class="col">
-                                        <span class="text-muted text-uppercase small fw-bold">Hoàn thành</span>
-                                        <h3 class="mb-0 mt-2">367</h3>
-                                    </div>
-                                    <div class="col-auto">
-                                        <div class="icon bg-info bg-gradient text-white rounded-circle p-3">
-                                            <i class="bi bi-check-circle fs-4"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p class="mt-3 mb-0 text-muted small">
-                                    <span class="text-success me-1"><i class="bi bi-arrow-up"></i> 15%</span>
-                                    <span>So với tháng trước</span>
-                                </p>
+                            <div class="col-md-4 text-end d-none d-md-block">
+                                <i class="bi bi-graph-up-arrow" style="font-size: 80px; opacity: 0.3;"></i>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Quick Actions -->
-                <div class="row g-3">
-                    <div class="col-lg-8">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-header bg-white">
-                                <h5 class="mb-0">
-                                    <i class="bi bi-activity text-primary"></i> Hoạt động gần đây
-                                </h5>
-                            </div>
+                <!-- Statistics Cards -->
+                <div class="row g-3 mb-4">
+                    <!-- Total Users -->
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card border-0 shadow-sm h-100 hover-lift">
                             <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col">
+                                        <span class="text-muted text-uppercase small fw-bold">Người dùng</span>
+                                        <h2 class="mb-0 mt-2 fw-bold text-primary">1,234</h2>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="icon-shape bg-primary bg-gradient text-white rounded-circle">
+                                            <i class="bi bi-people-fill fs-3"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3 d-flex align-items-center">
+                                    <span class="badge bg-success-subtle text-success me-2">
+                                        <i class="bi bi-arrow-up"></i> 12%
+                                    </span>
+                                    <span class="text-muted small">So với tháng trước</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Applications -->
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card border-0 shadow-sm h-100 hover-lift">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col">
+                                        <span class="text-muted text-uppercase small fw-bold">Hồ sơ</span>
+                                        <h2 class="mb-0 mt-2 fw-bold text-success">456</h2>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="icon-shape bg-success bg-gradient text-white rounded-circle">
+                                            <i class="bi bi-file-earmark-text-fill fs-3"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3 d-flex align-items-center">
+                                    <span class="badge bg-success-subtle text-success me-2">
+                                        <i class="bi bi-arrow-up"></i> 8%
+                                    </span>
+                                    <span class="text-muted small">So với tháng trước</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Processing -->
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card border-0 shadow-sm h-100 hover-lift">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col">
+                                        <span class="text-muted text-uppercase small fw-bold">Đang xử lý</span>
+                                        <h2 class="mb-0 mt-2 fw-bold text-warning">89</h2>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="icon-shape bg-warning bg-gradient text-white rounded-circle">
+                                            <i class="bi bi-hourglass-split fs-3"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3 d-flex align-items-center">
+                                    <span class="badge bg-danger-subtle text-danger me-2">
+                                        <i class="bi bi-arrow-down"></i> 3%
+                                    </span>
+                                    <span class="text-muted small">So với tháng trước</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Completed -->
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card border-0 shadow-sm h-100 hover-lift">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col">
+                                        <span class="text-muted text-uppercase small fw-bold">Hoàn thành</span>
+                                        <h2 class="mb-0 mt-2 fw-bold text-info">367</h2>
+                                    </div>
+                                    <div class="col-auto">
+                                        <div class="icon-shape bg-info bg-gradient text-white rounded-circle">
+                                            <i class="bi bi-check-circle-fill fs-3"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3 d-flex align-items-center">
+                                    <span class="badge bg-success-subtle text-success me-2">
+                                        <i class="bi bi-arrow-up"></i> 15%
+                                    </span>
+                                    <span class="text-muted small">So với tháng trước</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Row -->
+                <div class="row g-3">
+                    <!-- Recent Activities -->
+                    <div class="col-lg-8">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-white border-bottom">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">
+                                        <i class="bi bi-activity text-primary"></i>
+                                        Hoạt động gần đây
+                                    </h5>
+                                    <a href="#" class="btn btn-sm btn-outline-primary">
+                                        Xem tất cả <i class="bi bi-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
                                 <div class="table-responsive">
-                                    <table class="table table-hover align-middle">
+                                    <table class="table table-hover align-middle mb-0">
                                         <thead class="table-light">
                                             <tr>
-                                                <th>Thời gian</th>
-                                                <th>Người dùng</th>
-                                                <th>Hoạt động</th>
-                                                <th>Trạng thái</th>
+                                                <th class="border-0">
+                                                    <i class="bi bi-clock"></i> Thời gian
+                                                </th>
+                                                <th class="border-0">
+                                                    <i class="bi bi-person"></i> Người dùng
+                                                </th>
+                                                <th class="border-0">
+                                                    <i class="bi bi-activity"></i> Hoạt động
+                                                </th>
+                                                <th class="border-0">
+                                                    <i class="bi bi-check-circle"></i> Trạng thái
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr>
-                                                <td class="text-muted small">10:30 AM</td>
-                                                <td>Nguyễn Văn A</td>
-                                                <td>Nộp hồ sơ đăng ký</td>
-                                                <td><span class="badge bg-success">Thành công</span></td>
+                                                <td class="text-muted small">
+                                                    <i class="bi bi-clock-fill text-primary"></i>
+                                                    10:30 AM
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div
+                                                            class="avatar-sm bg-primary-subtle text-primary rounded-circle me-2 d-flex align-items-center justify-content-center">
+                                                            <i class="bi bi-person-fill"></i>
+                                                        </div>
+                                                        <span>Nguyễn Văn A</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-info-subtle text-info">
+                                                        <i class="bi bi-file-earmark-plus"></i> Nộp hồ sơ
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-success">
+                                                        <i class="bi bi-check-circle-fill"></i> Thành công
+                                                    </span>
+                                                </td>
                                             </tr>
                                             <tr>
-                                                <td class="text-muted small">10:15 AM</td>
-                                                <td>Trần Thị B</td>
-                                                <td>Cập nhật thông tin</td>
-                                                <td><span class="badge bg-info">Đang xử lý</span></td>
+                                                <td class="text-muted small">
+                                                    <i class="bi bi-clock-fill text-warning"></i>
+                                                    10:15 AM
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div
+                                                            class="avatar-sm bg-success-subtle text-success rounded-circle me-2 d-flex align-items-center justify-content-center">
+                                                            <i class="bi bi-person-fill"></i>
+                                                        </div>
+                                                        <span>Trần Thị B</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-warning-subtle text-warning">
+                                                        <i class="bi bi-pencil-square"></i> Cập nhật thông tin
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="bi bi-hourglass-split"></i> Đang xử lý
+                                                    </span>
+                                                </td>
                                             </tr>
                                             <tr>
-                                                <td class="text-muted small">09:45 AM</td>
-                                                <td>Lê Văn C</td>
-                                                <td>Tra cứu hồ sơ</td>
-                                                <td><span class="badge bg-secondary">Hoàn thành</span></td>
+                                                <td class="text-muted small">
+                                                    <i class="bi bi-clock-fill text-info"></i>
+                                                    09:45 AM
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div
+                                                            class="avatar-sm bg-info-subtle text-info rounded-circle me-2 d-flex align-items-center justify-content-center">
+                                                            <i class="bi bi-person-fill"></i>
+                                                        </div>
+                                                        <span>Lê Văn C</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-primary-subtle text-primary">
+                                                        <i class="bi bi-search"></i> Tra cứu hồ sơ
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-secondary">
+                                                        <i class="bi bi-check-all"></i> Hoàn thành
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-muted small">
+                                                    <i class="bi bi-clock-fill text-success"></i>
+                                                    09:20 AM
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div
+                                                            class="avatar-sm bg-danger-subtle text-danger rounded-circle me-2 d-flex align-items-center justify-content-center">
+                                                            <i class="bi bi-person-fill"></i>
+                                                        </div>
+                                                        <span>Phạm Thị D</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-danger-subtle text-danger">
+                                                        <i class="bi bi-file-earmark-x"></i> Hủy hồ sơ
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-danger">
+                                                        <i class="bi bi-x-circle-fill"></i> Đã hủy
+                                                    </span>
+                                                </td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -166,27 +306,91 @@
                         </div>
                     </div>
 
+                    <!-- Quick Actions & Shortcuts -->
                     <div class="col-lg-4">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-header bg-white">
+                        <!-- Quick Actions -->
+                        <div class="card border-0 shadow-sm mb-3">
+                            <div class="card-header bg-white border-bottom">
                                 <h5 class="mb-0">
-                                    <i class="bi bi-lightning-charge text-warning"></i> Thao tác nhanh
+                                    <i class="bi bi-lightning-charge-fill text-warning"></i>
+                                    Thao tác nhanh
                                 </h5>
                             </div>
                             <div class="card-body">
                                 <div class="d-grid gap-2">
-                                    <a href="#" class="btn btn-outline-primary" th:href="@{/admin/users/create}">
-                                        <i class="bi bi-person-plus"></i> Thêm người dùng
+                                    <a href="#"
+                                        class="btn btn-outline-primary d-flex align-items-center justify-content-between"
+                                        th:href="@{/admin/users}">
+                                        <span>
+                                            <i class="bi bi-person-plus-fill"></i> Thêm người dùng
+                                        </span>
+                                        <i class="bi bi-arrow-right"></i>
                                     </a>
-                                    <a href="#" class="btn btn-outline-success" th:href="@{/admin/services/create}">
-                                        <i class="bi bi-plus-circle"></i> Thêm dịch vụ
+                                    <a href="#"
+                                        class="btn btn-outline-success d-flex align-items-center justify-content-between"
+                                        th:href="@{/admin/services}">
+                                        <span>
+                                            <i class="bi bi-plus-circle-fill"></i> Thêm dịch vụ
+                                        </span>
+                                        <i class="bi bi-arrow-right"></i>
                                     </a>
-                                    <a href="#" class="btn btn-outline-info" th:href="@{/admin/reports}">
-                                        <i class="bi bi-file-bar-graph"></i> Xem báo cáo
+                                    <a href="#"
+                                        class="btn btn-outline-info d-flex align-items-center justify-content-between"
+                                        th:href="@{/admin/applications}">
+                                        <span>
+                                            <i class="bi bi-file-earmark-text-fill"></i> Quản lý hồ sơ
+                                        </span>
+                                        <i class="bi bi-arrow-right"></i>
                                     </a>
-                                    <a href="#" class="btn btn-outline-warning" th:href="@{/admin/settings}">
-                                        <i class="bi bi-gear"></i> Cài đặt hệ thống
+                                    <a href="#"
+                                        class="btn btn-outline-warning d-flex align-items-center justify-content-between"
+                                        th:href="@{/admin/reports}">
+                                        <span>
+                                            <i class="bi bi-file-bar-graph-fill"></i> Xem báo cáo
+                                        </span>
+                                        <i class="bi bi-arrow-right"></i>
                                     </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- System Status -->
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white border-bottom">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-server text-success"></i>
+                                    Trạng thái hệ thống
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="text-muted small">CPU Usage</span>
+                                        <span class="badge bg-success">45%</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: 45%">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="text-muted small">Memory Usage</span>
+                                        <span class="badge bg-warning text-dark">68%</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 68%">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-0">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="text-muted small">Storage</span>
+                                        <span class="badge bg-info">32%</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-info" role="progressbar" style="width: 32%"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -198,10 +402,72 @@
     </div>
 
     <!-- Include Footer -->
-    <div th:replace="~{layout/layout_fragment :: admin-footer}"></div>
+    <footer class="bg-light text-center py-3 mt-auto">
+        <div class="container">
+            <p class="text-muted mb-0">
+                &copy; 2024 Public Service Manager. All rights reserved.
+            </p>
+        </div>
+    </footer>
 
     <!-- Include Scripts -->
     <th:block th:replace="~{layout/layout_fragment :: scripts}"></th:block>
+
+    <style>
+        /* Custom Styles */
+        .icon-shape {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .avatar-sm {
+            width: 32px;
+            height: 32px;
+            font-size: 0.875rem;
+        }
+
+        .hover-lift {
+            transition: all 0.3s ease;
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .card {
+            transition: all 0.3s ease;
+        }
+
+        .table tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+            transform: scale(1.01);
+        }
+
+        .btn {
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateX(5px);
+        }
+
+        .progress {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            transition: width 0.6s ease;
+        }
+    </style>
 
 </body>
 

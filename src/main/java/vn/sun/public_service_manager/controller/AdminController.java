@@ -20,8 +20,8 @@ public class AdminController {
 
     @GetMapping("/login")
     public String loginPage(@RequestParam(value = "error", required = false) String error,
-                           @RequestParam(value = "logout", required = false) String logout,
-                           Model model) {
+            @RequestParam(value = "logout", required = false) String logout,
+            Model model) {
         if (error != null) {
             model.addAttribute("error", "Tên đăng nhập hoặc mật khẩu không đúng!");
         }
@@ -37,17 +37,21 @@ public class AdminController {
         model.addAttribute("username", authentication.getName());
         model.addAttribute("roles", authentication.getAuthorities());
 
-        // Check role and return different view
-        if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
-            return "admin/admin_dashboard";
-        } else if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_MANAGER"))) {
-            return "admin/manager_dashboard";
-        } else if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_STAFF"))) {
-            return "admin/staff_dashboard";
-        } else {
-            // Fallback, though security should prevent this
-            return "admin/dashboard";
-        }
+        // // Check role and return different view
+        // if (authentication.getAuthorities().stream().anyMatch(a ->
+        // a.getAuthority().equals("ROLE_ADMIN"))) {
+        // return "admin/admin_dashboard";
+        // } else if (authentication.getAuthorities().stream().anyMatch(a ->
+        // a.getAuthority().equals("ROLE_MANAGER"))) {
+        // return "admin/manager_dashboard";
+        // } else if (authentication.getAuthorities().stream().anyMatch(a ->
+        // a.getAuthority().equals("ROLE_STAFF"))) {
+        // return "admin/staff_dashboard";
+        // } else {
+        // // Fallback, though security should prevent this
+        // return "admin/dashboard";
+        // }
+        return "admin/admin_dashboard";
     }
 
     @PostMapping("/logout")
@@ -69,9 +73,9 @@ public class AdminController {
     @GetMapping("/users/{id}/detail")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public String userDetail(@org.springframework.web.bind.annotation.PathVariable Long id,
-                            @RequestParam String type,
-                            Model model,
-                            Authentication authentication) {
+            @RequestParam String type,
+            Model model,
+            Authentication authentication) {
         model.addAttribute("username", authentication.getName());
         model.addAttribute("userId", id);
         model.addAttribute("userType", type);
