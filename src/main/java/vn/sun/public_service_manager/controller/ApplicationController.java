@@ -36,6 +36,7 @@ import vn.sun.public_service_manager.service.UserManagementService;
 import vn.sun.public_service_manager.utils.FileUtil;
 import vn.sun.public_service_manager.utils.SecurityUtil;
 import vn.sun.public_service_manager.utils.annotation.ApiMessage;
+import vn.sun.public_service_manager.utils.annotation.LogActivity;
 
 @RestController
 @RequestMapping("/api/v1/applications")
@@ -79,6 +80,7 @@ public class ApplicationController {
         return ResponseEntity.ok(applicationService.getApplicationDetail(id, citizen.getId()));
     }
 
+    @LogActivity(action = "Upload hồ sơ", targetType = "APPLICATION", description = "Upload hồ sơ mới với file đính kèm")
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiMessage("Upload application with files successfully")
     @Operation(summary = "Tạo hồ sơ mới với file đính kèm", description = "Upload file và thông tin hồ sơ. File hỗ trợ: pdf, doc, docx, jpg, png")
@@ -123,11 +125,15 @@ public class ApplicationController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/upload-more")
+    @LogActivity(action = "Bổ sung tài liệu", targetType = "APPLICATION", description = "Upload thêm tài liệu cho hồ sơ đã tồn tại")
+    @PostMapping(value = "/upload-more", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiMessage("Upload more files to existing application successfully")
+    @Operation(summary = "Bổ sung tài liệu cho hồ sơ", description = "Upload thêm file cho hồ sơ đã tồn tại. File hỗ trợ: pdf, doc, docx, jpg, png")
     public ResponseEntity<FileResDTO> uploadMoreFiles(
-            @RequestParam("applicationId") Long applicationId,
-            @RequestParam(value = "files", required = false) MultipartFile[] files) throws FileException {
+            @Parameter(description = "ID hồ sơ", required = true, example = "1") @RequestParam("applicationId") Long applicationId,
+
+            @Parameter(description = "File đính kèm (pdf, doc, docx, jpg, png)", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)) @RequestPart("files") MultipartFile[] files)
+            throws FileException {
 
         if (files == null || files.length == 0) {
             throw new FileException("No files uploaded.");
@@ -136,14 +142,10 @@ public class ApplicationController {
         List<String> allowedExtensions = List.of("pdf", "doc", "docx", "jpg", "png");
         fileUtil.validateFileExtensions(files, allowedExtensions);
 
-        // create user folder if not exists
         String username = SecurityUtil.getCurrentUserName();
         fileUtil.createDirectoryIfNotExists(username);
-
-        // save files to user folder
         fileUtil.saveFiles(files, username);
 
-        // save application data
         applicationService.uploadMoreDocuments(applicationId, files);
 
         FileResDTO response = new FileResDTO();

@@ -213,7 +213,8 @@
                                                     th:text="${#temporals.format(doc.uploadedAt, 'dd/MM/yyyy HH:mm')}"></span>
                                             </small>
                                         </div>
-                                        <a href="#" class="btn btn-sm btn-outline-primary">
+                                        <a th:href="@{/admin/applications/documents/{docId}/download(docId=${doc.id})}" 
+                                           class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-download"></i> Tải
                                         </a>
                                     </li>

@@ -44,6 +44,7 @@ public class ApplicationResDTO {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class ApplicationDocument {
+        private Long id;
         private String fileName;
         private LocalDateTime uploadedAt;
     }

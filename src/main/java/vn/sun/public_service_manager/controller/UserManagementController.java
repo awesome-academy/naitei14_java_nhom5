@@ -33,6 +33,7 @@ import vn.sun.public_service_manager.dto.UserFilterDTO;
 import vn.sun.public_service_manager.dto.UserListDTO;
 import vn.sun.public_service_manager.service.UserManagementService;
 import vn.sun.public_service_manager.utils.annotation.ApiMessage;
+import vn.sun.public_service_manager.utils.annotation.LogActivity;
 
 @RestController
 @RequestMapping("/api/v1/admin/users")
@@ -77,6 +78,7 @@ public class UserManagementController {
         return ResponseEntity.ok(users);
     }
 
+    @LogActivity(action = "Create User", targetType = "USER MANAGEMENT", description = "Tạo người dùng mới trong hệ thống")
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Tạo người dùng thành công")
@@ -87,6 +89,7 @@ public class UserManagementController {
         return ResponseEntity.status(HttpStatus.CREATED).body(userId);
     }
 
+    @LogActivity(action = "Update User", targetType = "USER MANAGEMENT", description = "Cập nhật thông tin người dùng")
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Cập nhật người dùng thành công")
@@ -98,6 +101,7 @@ public class UserManagementController {
         return ResponseEntity.ok().build();
     }
 
+    @LogActivity(action = "Delete User", targetType = "USER MANAGEMENT", description = "Xóa người dùng khỏi hệ thống")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Xóa người dùng thành công")
@@ -159,6 +163,7 @@ public class UserManagementController {
             throw new RuntimeException("Lỗi khi xuất file CSV", e);
         }
     }
+
     @GetMapping("/export-citizens")
     @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Xuất danh sách công dân ra file CSV thành công")
@@ -181,6 +186,28 @@ public class UserManagementController {
         }
     }
 
+    @GetMapping("/export-applications")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @ApiMessage("Xuất danh sách hồ sơ ra file CSV thành công")
+    public void exportApplicationsToCsv(HttpServletResponse response, Authentication authentication) {
+        try {
+            response.setContentType("text/csv; charset=UTF-8");
+            response.setCharacterEncoding("UTF-8");
+            response.setHeader("Content-Disposition",
+                    "attachment; filename=\"application_list_" + System.currentTimeMillis() + ".csv\"");
+
+            // Ghi BOM UTF-8
+            response.getOutputStream().write(0xEF);
+            response.getOutputStream().write(0xBB);
+            response.getOutputStream().write(0xBF);
+
+            Writer writer = new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8);
+            userManagementService.exportApplicationsToCsv(writer, authentication);
+            writer.flush();
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi khi xuất file CSV Hồ sơ", e);
+        }
+    }
 
     @PostMapping("/import")
     @PreAuthorize("hasRole('ADMIN')")
@@ -205,6 +232,7 @@ public class UserManagementController {
                     .body(Map.of("message", "Lỗi khi đọc file CSV!"));
         }
     }
+
     @PostMapping("/import-citizens")
     @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Nhập danh sách công dân từ file CSV thành công")
