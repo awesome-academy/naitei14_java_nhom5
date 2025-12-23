@@ -4,6 +4,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import vn.sun.public_service_manager.entity.Service;
 import vn.sun.public_service_manager.service.ServiceManagementService;
 import vn.sun.public_service_manager.service.ServiceTypeService;
+import vn.sun.public_service_manager.utils.annotation.LogActivity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,14 +29,15 @@ public class ServiceAdminController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long serviceTypeId,
             Model model) {
-        
-        model.addAttribute("servicePage", serviceManagementService.getServices(page, size, sortBy, sortDir, keyword, serviceTypeId));
+
+        model.addAttribute("servicePage",
+                serviceManagementService.getServices(page, size, sortBy, sortDir, keyword, serviceTypeId));
         model.addAttribute("serviceTypes", serviceTypeService.getAllServiceTypes());
         model.addAttribute("sortBy", sortBy);
         model.addAttribute("sortDir", sortDir);
         model.addAttribute("keyword", keyword);
         model.addAttribute("serviceTypeId", serviceTypeId);
-        
+
         return "admin/service_list";
     }
 
@@ -47,6 +49,7 @@ public class ServiceAdminController {
         // Thêm danh sách Department nếu cần
         return "admin/service_form";
     }
+
     @GetMapping("/edit/{id}")
     public String showEditServiceForm(@PathVariable Long id, Model model, RedirectAttributes ra) {
         try {
@@ -63,11 +66,12 @@ public class ServiceAdminController {
             return "redirect:/services/list";
         }
     }
+
+    @LogActivity(action = "Quản lý dịch vụ - Tạo/Cập nhật dịch vụ", targetType = "SERVICE")
     @PostMapping("/save")
     public String saveService(
             @ModelAttribute("service") Service service,
-            RedirectAttributes redirectAttributes)
-    {
+            RedirectAttributes redirectAttributes) {
         boolean isNew = (service.getId() == null);
         Service savedService = serviceManagementService.createOrUpdateService(service);
         String action = isNew ? "Tạo mới" : "Cập nhật";
@@ -77,6 +81,7 @@ public class ServiceAdminController {
         return "redirect:/admin/services/edit/" + savedService.getId();
     }
 
+    @LogActivity(action = "Quản lý dịch vụ - Xóa dịch vụ", targetType = "SERVICE")
     @GetMapping("/delete/{id}")
     public String deleteService(@PathVariable Long id, RedirectAttributes ra) {
         try {

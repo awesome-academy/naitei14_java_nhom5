@@ -22,6 +22,7 @@ import vn.sun.public_service_manager.entity.User;
 import vn.sun.public_service_manager.repository.UserRepository;
 import vn.sun.public_service_manager.service.ApplicationService;
 import vn.sun.public_service_manager.service.ServiceTypeService;
+import vn.sun.public_service_manager.utils.annotation.LogActivity;
 import vn.sun.public_service_manager.utils.constant.StatusEnum;
 
 @Controller
@@ -109,6 +110,7 @@ public class AdminApplicationController {
         }
     }
 
+    @LogActivity(action = "Update Application Status", targetType = "APPLICATION", description = "Cập nhật trạng thái hồ sơ")
     @PostMapping("/{id}/update-status")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_STAFF')")
     public String updateStatus(@PathVariable Long id,
@@ -124,6 +126,7 @@ public class AdminApplicationController {
         return "redirect:/admin/applications/" + id;
     }
 
+    @LogActivity(action = "Assign Staff to Application", targetType = "APPLICATION", description = "Gán nhân viên xử lý hồ sơ")
     @PostMapping("/{id}/assign-staff")
     public String assignStaff(@PathVariable Long id,
             @ModelAttribute AssignStaffDTO dto,

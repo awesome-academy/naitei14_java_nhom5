@@ -34,6 +34,7 @@ import vn.sun.public_service_manager.entity.User;
 import vn.sun.public_service_manager.repository.DepartmentRepository;
 import vn.sun.public_service_manager.repository.UserRespository;
 import vn.sun.public_service_manager.utils.annotation.ApiMessage;
+import vn.sun.public_service_manager.utils.annotation.LogActivity;
 
 @RestController
 @RequestMapping("/api/v1/admin/departments")
@@ -49,15 +50,14 @@ public class DepartmentController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "ASC") String sortDir
-    ) {
-        Sort sort = sortDir.equalsIgnoreCase("ASC") 
-            ? Sort.by(sortBy).ascending() 
-            : Sort.by(sortBy).descending();
-        
+            @RequestParam(defaultValue = "ASC") String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("ASC")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<Department> departmentPage = departmentRepository.findAll(pageable);
-        
+
         Page<DepartmentDTO> dtoPage = departmentPage.map(dept -> DepartmentDTO.builder()
                 .id(dept.getId())
                 .code(dept.getCode())
@@ -66,10 +66,10 @@ public class DepartmentController {
                 .leaderId(dept.getLeader() != null ? dept.getLeader().getId() : null)
                 .leaderName(dept.getLeader() != null ? dept.getLeader().getUsername() : null)
                 .build());
-        
+
         return ResponseEntity.ok(dtoPage);
     }
-    
+
     @GetMapping("/all")
     @ApiMessage("Lấy tất cả phòng ban")
     public ResponseEntity<List<DepartmentDTO>> getAllDepartmentsNoPaging() {
@@ -92,7 +92,7 @@ public class DepartmentController {
     public ResponseEntity<DepartmentDTO> getDepartmentById(@PathVariable Long id) {
         Department dept = departmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Phòng ban không tồn tại"));
-        
+
         DepartmentDTO dto = DepartmentDTO.builder()
                 .id(dept.getId())
                 .code(dept.getCode())
@@ -101,10 +101,11 @@ public class DepartmentController {
                 .leaderId(dept.getLeader() != null ? dept.getLeader().getId() : null)
                 .leaderName(dept.getLeader() != null ? dept.getLeader().getUsername() : null)
                 .build();
-        
+
         return ResponseEntity.ok(dto);
     }
 
+    @LogActivity(action = "Create Department", targetType = "DEPARTMENT", description = "Tạo mới phòng ban")
     @PostMapping
     @ApiMessage("Tạo phòng ban thành công")
     public ResponseEntity<Long> createDepartment(@RequestBody DepartmentDTO dto) {
@@ -112,41 +113,41 @@ public class DepartmentController {
         if (departmentRepository.existsByCode(dto.getCode())) {
             throw new RuntimeException("Mã phòng ban đã tồn tại");
         }
-        
+
         Department dept = new Department();
         dept.setCode(dto.getCode());
         dept.setName(dto.getName());
         dept.setAddress(dto.getAddress());
-        
+
         // Set leader if provided
         if (dto.getLeaderId() != null) {
             User leader = userRespository.findById(dto.getLeaderId())
                     .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
             dept.setLeader(leader);
         }
-        
+
         Department saved = departmentRepository.save(dept);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved.getId());
     }
 
+    @LogActivity(action = "Update Department", targetType = "DEPARTMENT", description = "Cập nhật phòng ban")
     @PutMapping("/{id}")
     @ApiMessage("Cập nhật phòng ban thành công")
     public ResponseEntity<Void> updateDepartment(
             @PathVariable Long id,
-            @RequestBody DepartmentDTO dto
-    ) {
+            @RequestBody DepartmentDTO dto) {
         Department dept = departmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Phòng ban không tồn tại"));
-        
+
         // Check if code exists (exclude current)
         if (!dept.getCode().equals(dto.getCode()) && departmentRepository.existsByCode(dto.getCode())) {
             throw new RuntimeException("Mã phòng ban đã tồn tại");
         }
-        
+
         dept.setCode(dto.getCode());
         dept.setName(dto.getName());
         dept.setAddress(dto.getAddress());
-        
+
         // Update leader
         if (dto.getLeaderId() != null) {
             User leader = userRespository.findById(dto.getLeaderId())
@@ -155,11 +156,12 @@ public class DepartmentController {
         } else {
             dept.setLeader(null);
         }
-        
+
         departmentRepository.save(dept);
         return ResponseEntity.ok().build();
     }
 
+    @LogActivity(action = "Delete Department", targetType = "DEPARTMENT", description = "Xóa phòng ban")
     @DeleteMapping("/{id}")
     @ApiMessage("Xóa phòng ban thành công")
     public ResponseEntity<Void> deleteDepartment(@PathVariable Long id) {
@@ -175,24 +177,23 @@ public class DepartmentController {
         response.setContentType("text/csv; charset=UTF-8");
         response.setCharacterEncoding("UTF-8");
         response.setHeader("Content-Disposition", "attachment; filename=\"departments.csv\"");
-        
+
         try (Writer writer = new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8)) {
             // Write BOM for Excel
             writer.write('\ufeff');
-            
+
             // Write header
             writer.write("Mã phòng ban,Tên phòng ban,Địa chỉ\n");
-            
+
             // Get all departments
             List<Department> departments = departmentRepository.findAll(Sort.by(Sort.Direction.ASC, "code"));
-            
+
             // Write data
             for (Department dept : departments) {
                 writer.write(String.format("%s,%s,%s\n",
-                    escapeCsv(dept.getCode()),
-                    escapeCsv(dept.getName()),
-                    escapeCsv(dept.getAddress() != null ? dept.getAddress() : "")
-                ));
+                        escapeCsv(dept.getCode()),
+                        escapeCsv(dept.getName()),
+                        escapeCsv(dept.getAddress() != null ? dept.getAddress() : "")));
             }
         }
     }
@@ -201,88 +202,88 @@ public class DepartmentController {
     @ApiMessage("Nhập danh sách phòng ban thành công")
     public ResponseEntity<Map<String, Object>> importDepartmentsFromCsv(
             @RequestParam("file") MultipartFile file) {
-        
+
         if (file.isEmpty()) {
             throw new RuntimeException("File không được để trống");
         }
-        
+
         String filename = file.getOriginalFilename();
         if (filename == null || !filename.endsWith(".csv")) {
             throw new RuntimeException("Chỉ chấp nhận file CSV");
         }
-        
+
         Map<String, Object> result = new HashMap<>();
         int addedCount = 0;
         int skippedCount = 0;
         int errorCount = 0;
-        
+
         try (java.io.BufferedReader reader = new java.io.BufferedReader(
                 new java.io.InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
-            
+
             String line;
             boolean isFirstLine = true;
             int lineNumber = 0;
-            
+
             while ((line = reader.readLine()) != null) {
                 lineNumber++;
-                
+
                 // Skip BOM if present
                 if (lineNumber == 1 && line.startsWith("\ufeff")) {
                     line = line.substring(1);
                 }
-                
+
                 // Skip header
                 if (isFirstLine) {
                     isFirstLine = false;
                     continue;
                 }
-                
+
                 // Skip empty lines
                 if (line.trim().isEmpty()) {
                     continue;
                 }
-                
+
                 try {
                     String[] fields = parseCsvLine(line);
-                    
+
                     if (fields.length < 2) {
                         errorCount++;
                         continue;
                     }
-                    
+
                     String code = fields[0].trim();
                     String name = fields[1].trim();
                     String address = fields.length > 2 ? fields[2].trim() : "";
-                    
+
                     // Check if code already exists
                     if (departmentRepository.existsByCode(code)) {
                         skippedCount++;
                         continue;
                     }
-                    
+
                     // Create new department
                     Department dept = new Department();
                     dept.setCode(code);
                     dept.setName(name);
                     dept.setAddress(address.isEmpty() ? null : address);
-                    
+
                     departmentRepository.save(dept);
                     addedCount++;
-                    
+
                 } catch (Exception e) {
                     errorCount++;
                 }
             }
-            
+
             result.put("added", addedCount);
             result.put("skipped", skippedCount);
             result.put("errors", errorCount);
             result.put("message", String.format(
-                "Đã thêm %d phòng ban mới, bỏ qua %d phòng ban đã tồn tại, %d lỗi",
-                addedCount, skippedCount, errorCount));
-            
+                    "Đã thêm %d phòng ban mới, bỏ qua %d phòng ban đã tồn tại, %d lỗi",
+                    addedCount, skippedCount, errorCount));
+
             return ResponseEntity.ok(result);
-            
+
         } catch (IOException e) {
             throw new RuntimeException("Đọc file thất bại: " + e.getMessage());
         }
@@ -302,10 +303,10 @@ public class DepartmentController {
         java.util.List<String> fields = new java.util.ArrayList<>();
         StringBuilder currentField = new StringBuilder();
         boolean inQuotes = false;
-        
+
         for (int i = 0; i < line.length(); i++) {
             char c = line.charAt(i);
-            
+
             if (c == '\"') {
                 if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '\"') {
                     currentField.append('\"');
@@ -321,7 +322,7 @@ public class DepartmentController {
             }
         }
         fields.add(currentField.toString());
-        
+
         return fields.toArray(new String[0]);
     }
 }

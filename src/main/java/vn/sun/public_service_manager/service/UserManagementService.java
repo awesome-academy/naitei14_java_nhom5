@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import vn.sun.public_service_manager.dto.UserFilterDTO;
 import vn.sun.public_service_manager.dto.UserListDTO;
+import vn.sun.public_service_manager.entity.User;
 
 public interface UserManagementService {
 
@@ -88,5 +89,8 @@ public interface UserManagementService {
     void exportCitizensToCsv(Writer writer);
 
     void exportApplicationsToCsv(Writer writer);
+
     public Map<String, Object> importCitizensFromCsv(MultipartFile file) throws IOException;
+
+    User getByUsername(String username);
 }

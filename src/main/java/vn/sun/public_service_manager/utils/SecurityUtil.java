@@ -4,7 +4,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import vn.sun.public_service_manager.entity.Citizen;
-import vn.sun.public_service_manager.entity.User;
 import vn.sun.public_service_manager.exception.ResourceNotFoundException;
 import vn.sun.public_service_manager.repository.CitizenRepository;
 
