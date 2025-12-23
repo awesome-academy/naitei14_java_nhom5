@@ -158,6 +158,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (application.getDocuments() != null) {
             dto.setDocuments(application.getDocuments().stream().map(doc -> {
                 ApplicationResDTO.ApplicationDocument docDTO = new ApplicationResDTO.ApplicationDocument();
+                docDTO.setId(doc.getId());
                 docDTO.setFileName(doc.getFileName());
                 docDTO.setUploadedAt(doc.getUploadedAt());
                 return docDTO;

@@ -35,6 +35,7 @@ public class AdminApplicationController {
     private final ApplicationService applicationService;
     private final ServiceTypeService serviceTypeService;
     private final UserRepository userRepository;
+    private final vn.sun.public_service_manager.repository.ApplicationDocumentRepository documentRepository;
 
     @GetMapping
     public String listApplications(
@@ -196,5 +197,45 @@ public class AdminApplicationController {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
         }
         return "redirect:/admin/applications/" + id;
+    }
+
+    @GetMapping("/documents/{documentId}/download")
+    public void downloadDocument(
+            @PathVariable Long documentId,
+            jakarta.servlet.http.HttpServletResponse response) throws Exception {
+        
+        vn.sun.public_service_manager.entity.ApplicationDocument document = 
+            documentRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Document not found with ID: " + documentId));
+
+        String citizenNationalId = document.getApplication().getCitizen().getNationalId();
+        String fileName = document.getFileName();
+
+        // Build file path
+        String uploadDir = "applications";
+        java.nio.file.Path filePath = java.nio.file.Paths.get(uploadDir, citizenNationalId, fileName);
+
+        if (!java.nio.file.Files.exists(filePath)) {
+            response.sendError(jakarta.servlet.http.HttpServletResponse.SC_NOT_FOUND, 
+                "File not found: " + filePath.toAbsolutePath());
+            return;
+        }
+
+        // Set response headers
+        response.setContentType("application/octet-stream");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+        response.setContentLengthLong(java.nio.file.Files.size(filePath));
+
+        // Write file to response
+        try (java.io.InputStream inputStream = java.nio.file.Files.newInputStream(filePath);
+             java.io.OutputStream outputStream = response.getOutputStream()) {
+            
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+            outputStream.flush();
+        }
     }
 }
