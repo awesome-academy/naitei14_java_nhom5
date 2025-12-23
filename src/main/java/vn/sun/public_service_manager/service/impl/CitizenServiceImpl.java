@@ -132,10 +132,10 @@ public class CitizenServiceImpl implements CitizenService {
     }
 
     @Override
-    public void deleteById(Long id) {
+    public void toggleById(Long id) {
         if (!citizenRepository.existsById(id)) {
             throw new ResourceNotFoundException("Citizen not found with id: " + id);
         }
-        citizenRepository.deleteById(id);
+        citizenRepository.toggleActiveById(id);
     }
 }

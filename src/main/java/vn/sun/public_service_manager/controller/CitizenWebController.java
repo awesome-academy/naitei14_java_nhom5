@@ -105,11 +105,12 @@ public class CitizenWebController {
         return "citizen/citizen_form";
     }
 
-    @GetMapping("/{id}/delete")
+    @GetMapping("/{id}/toggle")
     public String delete(@PathVariable Long id, RedirectAttributes ra) {
         try {
-            citizenService.deleteById(id);
+            citizenService.toggleById(id);
             ra.addFlashAttribute("message", "Xóa công dân thành công!");
+            ra.addFlashAttribute("message", "Cập nhật trạng thái công dân thành công!");
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
         }
