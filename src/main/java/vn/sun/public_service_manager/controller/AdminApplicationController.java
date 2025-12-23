@@ -36,6 +36,7 @@ public class AdminApplicationController {
     private final ServiceTypeService serviceTypeService;
     private final UserRepository userRepository;
     private final vn.sun.public_service_manager.repository.ApplicationDocumentRepository documentRepository;
+    private final vn.sun.public_service_manager.repository.ServiceRepository serviceRepository;
 
     @GetMapping
     public String listApplications(
@@ -120,7 +121,16 @@ public class AdminApplicationController {
         model.addAttribute("filter", filter);
         model.addAttribute("statuses", StatusEnum.values());
         
-        // Filter serviceTypes theo department nếu là MANAGER hoặc STAFF
+        // Load services theo department nếu là MANAGER hoặc STAFF
+        List<vn.sun.public_service_manager.entity.Service> services;
+        if ((isManager || isStaff) && currentUser.getDepartment() != null) {
+            services = serviceRepository.findByResponsibleDepartmentId(currentUser.getDepartment().getId(), Pageable.unpaged()).getContent();
+        } else {
+            services = serviceRepository.findAll();
+        }
+        model.addAttribute("services", services);
+        
+        // Also load serviceTypes for compatibility
         List<vn.sun.public_service_manager.entity.ServiceType> serviceTypes;
         if ((isManager || isStaff) && currentUser.getDepartment() != null) {
             serviceTypes = serviceTypeService.getServiceTypesByDepartmentId(currentUser.getDepartment().getId());
@@ -236,6 +246,64 @@ public class AdminApplicationController {
                 outputStream.write(buffer, 0, bytesRead);
             }
             outputStream.flush();
+        }
+    }
+
+    @GetMapping("/export")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_STAFF')")
+    public void exportApplications(
+            jakarta.servlet.http.HttpServletResponse response,
+            org.springframework.security.core.Authentication authentication) {
+        try {
+            response.setContentType("text/csv; charset=UTF-8");
+            response.setCharacterEncoding("UTF-8");
+            response.setHeader("Content-Disposition",
+                    "attachment; filename=\"application_list_" + System.currentTimeMillis() + ".csv\"");
+
+            // Write BOM for Excel UTF-8 recognition
+            response.getOutputStream().write(0xEF);
+            response.getOutputStream().write(0xBB);
+            response.getOutputStream().write(0xBF);
+
+            java.io.Writer writer = new java.io.OutputStreamWriter(
+                    response.getOutputStream(), 
+                    java.nio.charset.StandardCharsets.UTF_8);
+            
+            // Get current user and role
+            String username = authentication.getName();
+            User currentUser = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            boolean isStaff = authentication.getAuthorities().stream()
+                    .map(org.springframework.security.core.GrantedAuthority::getAuthority)
+                    .anyMatch(role -> role.equals("ROLE_STAFF"));
+            
+            boolean isManager = authentication.getAuthorities().stream()
+                    .map(org.springframework.security.core.GrantedAuthority::getAuthority)
+                    .anyMatch(role -> role.equals("ROLE_MANAGER"));
+            
+            ApplicationFilterDTO filter = new ApplicationFilterDTO();
+            
+            if (isStaff) {
+                // STAFF: only export their assigned applications
+                filter.setAssignedStaffId(currentUser.getId());
+                applicationService.exportApplicationsToCsv(writer, filter);
+            } else if (isManager) {
+                // MANAGER: only export applications of their department
+                if (currentUser.getDepartment() != null) {
+                    filter.setDepartmentId(currentUser.getDepartment().getId());
+                    applicationService.exportApplicationsToCsv(writer, filter);
+                } else {
+                    applicationService.exportApplicationsToCsv(writer);
+                }
+            } else {
+                // ADMIN: export all applications
+                applicationService.exportApplicationsToCsv(writer);
+            }
+            
+            writer.flush();
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi khi xuất file CSV Hồ sơ", e);
         }
     }
 }

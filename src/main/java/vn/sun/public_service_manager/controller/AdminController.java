@@ -13,10 +13,26 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import vn.sun.public_service_manager.repository.UserRepository;
+import vn.sun.public_service_manager.repository.ApplicationRepository;
+import vn.sun.public_service_manager.repository.ApplicationStatusRepository;
+import vn.sun.public_service_manager.utils.constant.StatusEnum;
 
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
+
+    private final UserRepository userRepository;
+    private final ApplicationRepository applicationRepository;
+    private final ApplicationStatusRepository applicationStatusRepository;
+
+    public AdminController(UserRepository userRepository,
+                          ApplicationRepository applicationRepository,
+                          ApplicationStatusRepository applicationStatusRepository) {
+        this.userRepository = userRepository;
+        this.applicationRepository = applicationRepository;
+        this.applicationStatusRepository = applicationStatusRepository;
+    }
 
     @GetMapping("/login")
     public String loginPage(@RequestParam(value = "error", required = false) String error,
@@ -37,20 +53,19 @@ public class AdminController {
         model.addAttribute("username", authentication.getName());
         model.addAttribute("roles", authentication.getAuthorities());
 
-        // // Check role and return different view
-        // if (authentication.getAuthorities().stream().anyMatch(a ->
-        // a.getAuthority().equals("ROLE_ADMIN"))) {
-        // return "admin/admin_dashboard";
-        // } else if (authentication.getAuthorities().stream().anyMatch(a ->
-        // a.getAuthority().equals("ROLE_MANAGER"))) {
-        // return "admin/manager_dashboard";
-        // } else if (authentication.getAuthorities().stream().anyMatch(a ->
-        // a.getAuthority().equals("ROLE_STAFF"))) {
-        // return "admin/staff_dashboard";
-        // } else {
-        // // Fallback, though security should prevent this
-        // return "admin/dashboard";
-        // }
+        // Load real statistics from database
+        long totalUsers = userRepository.count();
+        long totalApplications = applicationRepository.count();
+        
+        // Count applications by latest status
+        long processingCount = applicationStatusRepository.countByLatestStatus(StatusEnum.PROCESSING);
+        long approvedCount = applicationStatusRepository.countByLatestStatus(StatusEnum.APPROVED);
+        
+        model.addAttribute("totalUsers", totalUsers);
+        model.addAttribute("totalApplications", totalApplications);
+        model.addAttribute("processingCount", processingCount);
+        model.addAttribute("approvedCount", approvedCount);
+
         return "admin/admin_dashboard";
     }
 
@@ -63,29 +78,31 @@ public class AdminController {
         return "redirect:/admin/login?logout";
     }
 
-    @GetMapping("/users")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public String userManagement(Model model, Authentication authentication) {
-        model.addAttribute("username", authentication.getName());
-        return "admin/user_management";
-    }
+    // Moved to AdminUserManagementController
+    // @GetMapping("/users")
+    // @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    // public String userManagement(Model model, Authentication authentication) {
+    //     model.addAttribute("username", authentication.getName());
+    //     return "admin/user_management";
+    // }
 
-    @GetMapping("/users/{id}/detail")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public String userDetail(@org.springframework.web.bind.annotation.PathVariable Long id,
-            @RequestParam String type,
-            Model model,
-            Authentication authentication) {
-        model.addAttribute("username", authentication.getName());
-        model.addAttribute("userId", id);
-        model.addAttribute("userType", type);
-        return "admin/user_detail";
-    }
+    // @GetMapping("/users/{id}/detail")
+    // @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    // public String userDetail(@org.springframework.web.bind.annotation.PathVariable Long id,
+    //         @RequestParam String type,
+    //         Model model,
+    //         Authentication authentication) {
+    //     model.addAttribute("username", authentication.getName());
+    //     model.addAttribute("userId", id);
+    //     model.addAttribute("userType", type);
+    //     return "admin/user_detail";
+    // }
 
-    @GetMapping("/departments")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public String departmentManagement(Model model, Authentication authentication) {
-        model.addAttribute("username", authentication.getName());
-        return "admin/department_management";
-    }
+    // Moved to AdminDepartmentController
+    // @GetMapping("/departments")
+    // @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    // public String departmentManagement(Model model, Authentication authentication) {
+    //     model.addAttribute("username", authentication.getName());
+    //     return "admin/department_management";
+    // }
 }

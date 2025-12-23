@@ -287,8 +287,14 @@ public class ApplicationServiceImpl implements ApplicationService {
                         () -> new ResourceNotFoundException("Hồ sơ không tồn tại hoặc bạn không có quyền truy cập."));
         return ApplicationResApiDTO.fromEntity(application);
     }
+    
     @Override
     public void exportApplicationsToCsv(Writer writer) {
+        exportApplicationsToCsv(writer, null);
+    }
+    
+    @Override
+    public void exportApplicationsToCsv(Writer writer, ApplicationFilterDTO filter) {
         try {
             // 1. Ghi ký tự BOM để hỗ trợ hiển thị tiếng Việt trong Excel
             writer.write('\ufeff');
@@ -307,15 +313,31 @@ public class ApplicationServiceImpl implements ApplicationService {
                 csvWriter.writeNext(header);
 
                 // 2. Lấy dữ liệu hồ sơ (Nên dùng JOIN FETCH để tránh Lazy loading)
-                List<Application> applications = applicationRepository.findAll();
+                List<Application> applications;
+                if (filter != null) {
+                    // Apply filter if provided (for STAFF export)
+                    Specification<Application> spec = ApplicationSpecification.filterByCriteria(filter);
+                    applications = applicationRepository.findAll(spec);
+                } else {
+                    applications = applicationRepository.findAll();
+                }
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
                 for (Application app : applications) {
                     // Lấy trạng thái mới nhất từ danh sách statuses
                     String currentStatus = "N/A";
                     if (app.getStatuses() != null && !app.getStatuses().isEmpty()) {
-                        // Sắp xếp hoặc lấy phần tử cuối cùng (giả định phần tử cuối là mới nhất)
-                        ApplicationStatus lastStatus = app.getStatuses().get(app.getStatuses().size() - 1);
+                        // Lấy status có updatedAt mới nhất (hoặc id lớn nhất nếu updatedAt null)
+                        ApplicationStatus lastStatus = app.getStatuses().stream()
+                                .max((s1, s2) -> {
+                                    if (s1.getUpdatedAt() != null && s2.getUpdatedAt() != null) {
+                                        return s1.getUpdatedAt().compareTo(s2.getUpdatedAt());
+                                    } else if (s1.getId() != null && s2.getId() != null) {
+                                        return s1.getId().compareTo(s2.getId());
+                                    }
+                                    return 0;
+                                })
+                                .orElse(app.getStatuses().get(0));
                         currentStatus = lastStatus.getStatus() != null ? lastStatus.getStatus().name() : "PENDING";
                     }
 

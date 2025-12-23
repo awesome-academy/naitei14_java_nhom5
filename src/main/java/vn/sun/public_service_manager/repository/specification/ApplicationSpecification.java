@@ -3,6 +3,7 @@ package vn.sun.public_service_manager.repository.specification;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 import vn.sun.public_service_manager.dto.ApplicationFilterDTO;
 import vn.sun.public_service_manager.entity.*;
@@ -21,13 +22,22 @@ public class ApplicationSpecification {
             
             // Join with citizen
             Join<Application, Citizen> citizenJoin = root.join("citizen", JoinType.LEFT);
-            
-            // Join with statuses to get current status
-            Join<Application, ApplicationStatus> statusJoin = root.join("statuses", JoinType.LEFT);
 
-            // Filter by status
+            // Filter by status - only filter by the LATEST status using subquery
             if (filter.getStatus() != null) {
-                predicates.add(criteriaBuilder.equal(statusJoin.get("status"), filter.getStatus()));
+                // Subquery to get the latest status ID for each application
+                Subquery<Long> latestStatusSubquery = query.subquery(Long.class);
+                jakarta.persistence.criteria.Root<ApplicationStatus> statusSubRoot = latestStatusSubquery.from(ApplicationStatus.class);
+                
+                latestStatusSubquery.select(criteriaBuilder.max(statusSubRoot.get("id")))
+                        .where(criteriaBuilder.equal(statusSubRoot.get("application"), root));
+                
+                // Join with statuses and filter by latest
+                Join<Application, ApplicationStatus> statusJoin = root.join("statuses", JoinType.INNER);
+                predicates.add(criteriaBuilder.and(
+                    criteriaBuilder.equal(statusJoin.get("status"), filter.getStatus()),
+                    criteriaBuilder.in(statusJoin.get("id")).value(latestStatusSubquery)
+                ));
             }
 
             // Filter by service type
@@ -76,5 +86,9 @@ public class ApplicationSpecification {
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    public static Specification<Application> filterByCriteria(ApplicationFilterDTO filter) {
+        return filterApplications(filter);
     }
 }

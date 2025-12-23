@@ -1,5 +1,7 @@
 package vn.sun.public_service_manager.service;
 
+import java.io.Writer;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,8 +14,6 @@ import vn.sun.public_service_manager.dto.response.ApplicationPageResponse;
 import vn.sun.public_service_manager.dto.response.ApplicationResApiDTO;
 import vn.sun.public_service_manager.dto.response.ApplicationResDTO;
 import vn.sun.public_service_manager.entity.Application;
-
-import java.io.Writer;
 
 public interface ApplicationService {
 
@@ -38,4 +38,5 @@ public interface ApplicationService {
 
     ApplicationResApiDTO getApplicationDetail(Long id, Long citizenId);
     void exportApplicationsToCsv(Writer writer);
+    void exportApplicationsToCsv(Writer writer, ApplicationFilterDTO filter);
 }
