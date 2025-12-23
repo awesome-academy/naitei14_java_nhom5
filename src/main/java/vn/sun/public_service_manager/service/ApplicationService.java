@@ -39,4 +39,7 @@ public interface ApplicationService {
     ApplicationResApiDTO getApplicationDetail(Long id, Long citizenId);
     void exportApplicationsToCsv(Writer writer);
     void exportApplicationsToCsv(Writer writer, ApplicationFilterDTO filter);
+    
+    // Soft delete
+    void softDeleteApplication(Long id);
 }

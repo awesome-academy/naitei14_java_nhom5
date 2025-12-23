@@ -31,6 +31,13 @@
                         <a th:href="@{/admin/applications}" class="btn btn-secondary">
                             <i class="bi bi-arrow-left"></i> Quay lại
                         </a>
+                        <button type="button" class="btn btn-danger" 
+                            th:data-app-id="${applicationDetail.id}"
+                            th:data-app-code="${applicationDetail.code}"
+                            onclick="confirmDeleteFromData(this)"
+                            sec:authorize="hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')">
+                            <i class="bi bi-trash"></i> Xóa hồ sơ
+                        </button>
                     </div>
                 </div>
 
@@ -360,6 +367,32 @@
                         })
                     })
                 });
+
+                function confirmDeleteFromData(button) {
+                    const appId = button.getAttribute('data-app-id');
+                    const appCode = button.getAttribute('data-app-code');
+                    confirmDelete(appId, appCode);
+                }
+
+                function confirmDelete(appId, appCode) {
+                    if (confirm(`Bạn có chắc chắn muốn xóa hồ sơ "${appCode}" không?\n\nHồ sơ sẽ bị xóa mềm và không hiển thị trong danh sách nữa.`)) {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '/admin/applications/' + appId + '/delete';
+                        
+                        const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+                        if (csrfToken) {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = '_csrf';
+                            input.value = csrfToken;
+                            form.appendChild(input);
+                        }
+                        
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                }
             </script>
 </body>
 

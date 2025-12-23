@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import vn.sun.public_service_manager.entity.Application;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -39,5 +40,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Long>,
                         "LEFT JOIN FETCH a.assignedStaff " +
                         "WHERE a.id = :id AND c.id = :citizenId")
         Optional<Application> findByIdWithDetails(@Param("id") Long id, Long citizenId);
+        
+        List<Application> findByServiceId(Long serviceId);
 
 }

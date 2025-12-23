@@ -364,4 +364,12 @@ public class ApplicationServiceImpl implements ApplicationService {
             throw new RuntimeException("Lỗi khi xuất CSV Application: " + e.getMessage(), e);
         }
     }
+    
+    @Override
+    public void softDeleteApplication(Long id) {
+        Application application = applicationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found with id: " + id));
+        application.setActive(false);
+        applicationRepository.save(application);
+    }
 }

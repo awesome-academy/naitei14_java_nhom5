@@ -17,8 +17,14 @@ public class ApplicationSpecification {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
+            // Only get active applications (soft delete)
+            predicates.add(criteriaBuilder.equal(root.get("active"), true));
+
             // Join with service
             Join<Application, vn.sun.public_service_manager.entity.Service> serviceJoin = root.join("service", JoinType.LEFT);
+            
+            // Only get applications with active services
+            predicates.add(criteriaBuilder.equal(serviceJoin.get("active"), true));
             
             // Join with citizen
             Join<Application, Citizen> citizenJoin = root.join("citizen", JoinType.LEFT);

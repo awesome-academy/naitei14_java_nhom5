@@ -181,6 +181,14 @@
                                                 title="Xem chi tiết">
                                                 <i class="bi bi-eye"></i> Xem
                                             </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                th:data-app-id="${app.id}"
+                                                th:data-app-code="${app.applicationCode}"
+                                                onclick="confirmDeleteFromData(this)"
+                                                data-bs-toggle="tooltip" title="Xóa hồ sơ"
+                                                sec:authorize="hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')">
+                                                <i class="bi bi-trash"></i> Xóa
+                                            </button>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -267,6 +275,32 @@
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl)
         })
+
+        function confirmDeleteFromData(button) {
+            const appId = button.getAttribute('data-app-id');
+            const appCode = button.getAttribute('data-app-code');
+            confirmDelete(appId, appCode);
+        }
+
+        function confirmDelete(appId, appCode) {
+            if (confirm(`Bạn có chắc chắn muốn xóa hồ sơ "${appCode}" không?\n\nHồ sơ sẽ bị xóa mềm và không hiển thị trong danh sách nữa.`)) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/admin/applications/' + appId + '/delete';
+                
+                const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+                if (csrfToken) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = '_csrf';
+                    input.value = csrfToken;
+                    form.appendChild(input);
+                }
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
     </script>
 
 </body>

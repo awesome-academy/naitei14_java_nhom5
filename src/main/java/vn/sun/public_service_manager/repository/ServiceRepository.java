@@ -13,15 +13,17 @@ import vn.sun.public_service_manager.entity.ServiceType;
 @Repository
 public interface ServiceRepository extends JpaRepository<Service, Long> {
 
-    @Query("SELECT s FROM Service s WHERE " +
+    @Query("SELECT s FROM Service s WHERE (" +
             "LOWER(s.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(s.description) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-            "LOWER(s.code) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+            "LOWER(s.code) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<Service> findByKeyword(String keyword, Pageable pageable);
 
     Page<Service> findByCodeContainingIgnoreCase(String code, Pageable pageable);
 
     Page<Service> findByServiceTypeId(Long serviceTypeId, Pageable pageable);
+    
+    Page<Service> findByServiceTypeIdAndActiveTrue(Long serviceTypeId, Pageable pageable);
 
     @Query("SELECT s FROM Service s WHERE s.serviceType.id = :serviceTypeId AND (" +
             "LOWER(s.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
@@ -30,6 +32,8 @@ public interface ServiceRepository extends JpaRepository<Service, Long> {
     Page<Service> findByServiceTypeIdAndKeyword(Long serviceTypeId, String keyword, Pageable pageable);
 
     Page<Service> findByResponsibleDepartmentId(Long departmentId, Pageable pageable);
+    
+    Page<Service> findByResponsibleDepartmentIdAndActiveTrue(Long departmentId, Pageable pageable);
 
     @Query("SELECT DISTINCT s.serviceType FROM Service s WHERE s.responsibleDepartment.id = :departmentId")
     List<ServiceType> findDistinctServiceTypesByDepartmentId(@Param("departmentId") Long departmentId);

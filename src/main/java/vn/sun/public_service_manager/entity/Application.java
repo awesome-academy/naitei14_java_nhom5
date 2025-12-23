@@ -52,6 +52,9 @@ public class Application {
     @Column(name = "last_updated")
     private LocalDateTime lastUpdated;
 
+    @Column(name = "active", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 1")
+    private Boolean active = true;
+
     @OneToMany(mappedBy = "application")
     private List<ApplicationDocument> documents;
 

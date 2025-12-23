@@ -92,4 +92,16 @@ public class ServiceAdminController {
         }
         return "redirect:/services/list";
     }
+    
+    @LogActivity(action = "Quản lý dịch vụ - Khôi phục dịch vụ", targetType = "SERVICE")
+    @GetMapping("/restore/{id}")
+    public String restoreService(@PathVariable Long id, RedirectAttributes ra) {
+        try {
+            serviceManagementService.restoreService(id);
+            ra.addFlashAttribute("successMessage", "Khôi phục dịch vụ ID " + id + " thành công.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", "Không thể khôi phục dịch vụ ID " + id + ".");
+        }
+        return "redirect:/services/list";
+    }
 }

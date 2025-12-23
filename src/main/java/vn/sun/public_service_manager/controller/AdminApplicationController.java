@@ -306,4 +306,17 @@ public class AdminApplicationController {
             throw new RuntimeException("Lỗi khi xuất file CSV Hồ sơ", e);
         }
     }
+
+    @PostMapping("/{id}/delete")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+    public String deleteApplication(@PathVariable Long id,
+            RedirectAttributes redirectAttributes) {
+        try {
+            applicationService.softDeleteApplication(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Xóa hồ sơ thành công");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+        }
+        return "redirect:/admin/applications";
+    }
 }

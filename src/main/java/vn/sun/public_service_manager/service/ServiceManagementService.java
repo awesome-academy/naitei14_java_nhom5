@@ -25,6 +25,7 @@ public class ServiceManagementService {
 
     private final ServiceRepository serviceRepository;
     private final ServiceTypeService serviceTypeService;
+    private final vn.sun.public_service_manager.repository.ApplicationRepository applicationRepository;
 
     @Transactional
     public Service createOrUpdateService(Service service) {
@@ -35,8 +36,50 @@ public class ServiceManagementService {
         return serviceRepository.findById(id);
     }
 
+    @Transactional
     public void deleteService(Long id) {
-        serviceRepository.deleteById(id);
+        // Soft delete: set active = false for service and all related applications
+        Service service = serviceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Service not found with id: " + id));
+        
+        // Set service inactive
+        service.setActive(false);
+        serviceRepository.save(service);
+        
+        // Set all applications of this service inactive
+        List<vn.sun.public_service_manager.entity.Application> applications = 
+            applicationRepository.findByServiceId(id);
+        
+        for (vn.sun.public_service_manager.entity.Application app : applications) {
+            app.setActive(false);
+        }
+        
+        if (!applications.isEmpty()) {
+            applicationRepository.saveAll(applications);
+        }
+    }
+    
+    @Transactional
+    public void restoreService(Long id) {
+        // Restore: set active = true for service and all related applications
+        Service service = serviceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Service not found with id: " + id));
+        
+        // Set service active
+        service.setActive(true);
+        serviceRepository.save(service);
+        
+        // Set all applications of this service active
+        List<vn.sun.public_service_manager.entity.Application> applications = 
+            applicationRepository.findByServiceId(id);
+        
+        for (vn.sun.public_service_manager.entity.Application app : applications) {
+            app.setActive(true);
+        }
+        
+        if (!applications.isEmpty()) {
+            applicationRepository.saveAll(applications);
+        }
     }
     public Page<Service> getServices(
             int page,

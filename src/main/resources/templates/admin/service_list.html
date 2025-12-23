@@ -94,7 +94,12 @@
                                         <tr th:each="service : ${servicePage.content}">
                                             <td th:text="${service.id}"></td>
                                             <td th:text="${service.code}"></td>
-                                            <td th:text="${service.name}"></td>
+                                            <td>
+                                                <span th:text="${service.name}"></span>
+                                                <span th:if="${service.active == false}" class="badge bg-warning text-dark ms-2">
+                                                    <i class="bi bi-exclamation-triangle"></i> Đã vô hiệu hóa
+                                                </span>
+                                            </td>
                                             <td><span class="badge bg-secondary"
                                                     th:text="${service.serviceType?.category}"></span></td>
                                             <td
@@ -107,7 +112,16 @@
                                                     class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
                                                     <i class="bi bi-pencil-square"></i>
                                                 </a>
-                                                <a th:href="@{/admin/services/delete/{id}(id=${service.id})}"
+                                                <!-- Show Restore button if service is inactive -->
+                                                <a th:if="${service.active == false}"
+                                                    th:href="@{/admin/services/restore/{id}(id=${service.id})}"
+                                                    class="btn btn-sm btn-outline-success" title="Khôi phục"
+                                                    onclick="return confirm('Bạn có chắc chắn muốn khôi phục dịch vụ này?');">
+                                                    <i class="bi bi-arrow-clockwise"></i>
+                                                </a>
+                                                <!-- Show Delete button if service is active -->
+                                                <a th:if="${service.active == true}"
+                                                    th:href="@{/admin/services/delete/{id}(id=${service.id})}"
                                                     class="btn btn-sm btn-outline-danger" title="Xóa"
                                                     onclick="return confirm('Bạn có chắc chắn muốn xóa dịch vụ này?');">
                                                     <i class="bi bi-trash"></i>

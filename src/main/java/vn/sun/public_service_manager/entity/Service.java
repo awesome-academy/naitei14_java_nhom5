@@ -49,6 +49,9 @@ public class Service {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "active", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 1")
+    private Boolean active = true;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
