@@ -3,6 +3,7 @@ package vn.sun.public_service_manager.controller;
 import org.springframework.security.access.prepost.PreAuthorize;
 import vn.sun.public_service_manager.entity.ServiceType;
 import vn.sun.public_service_manager.service.ServiceTypeService;
+import vn.sun.public_service_manager.utils.annotation.LogActivity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -30,6 +31,7 @@ public class ServiceTypeAdminController {
         return "admin/servicetype_form";
     }
 
+    @LogActivity(action = "Chỉnh Sửa Loại Dịch Vụ", targetType = "SERVICE_TYPE", description = "Chỉnh sửa loại dịch vụ với ID: {id}")
     @GetMapping("/edit/{id}")
     public String showEditForm(@PathVariable Long id, Model model, RedirectAttributes ra) {
         try {
@@ -44,15 +46,18 @@ public class ServiceTypeAdminController {
         }
     }
 
+    @LogActivity(action = "Lưu Loại Dịch Vụ", targetType = "SERVICE_TYPE", description = "Lưu loại dịch vụ với ID: {serviceType.id}")
     @PostMapping("/save")
     public String saveServiceType(@ModelAttribute("serviceType") ServiceType serviceType, RedirectAttributes ra) {
         boolean isNew = (serviceType.getId() == null);
         serviceTypeService.saveServiceType(serviceType);
         String action = isNew ? "Tạo mới" : "Cập nhật";
-        ra.addFlashAttribute("successMessage", action + " loại dịch vụ '" + serviceType.getCategory() + "' thành công.");
+        ra.addFlashAttribute("successMessage",
+                action + " loại dịch vụ '" + serviceType.getCategory() + "' thành công.");
         return "redirect:/admin/servicetypes";
     }
 
+    @LogActivity(action = "Xóa Loại Dịch Vụ", targetType = "SERVICE_TYPE", description = "Xóa loại dịch vụ với ID: {id}")
     @GetMapping("/delete/{id}")
     public String deleteServiceType(@PathVariable Long id, RedirectAttributes ra) {
         try {

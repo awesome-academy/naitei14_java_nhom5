@@ -552,6 +552,7 @@ public class UserManagementServiceImpl implements UserManagementService {
 
         return value;
     }
+
     @Override
     public List<UserListDTO> getAllUsersForSelection() {
         List<User> users = userRepository.findAll(Sort.by(Sort.Direction.ASC, "username"));
@@ -563,9 +564,11 @@ public class UserManagementServiceImpl implements UserManagementService {
                         .build())
                 .collect(Collectors.toList());
     }
+
     @Override
     public List<UserListDTO> getUsersByDepartmentId(Long departmentId) {
-        List<User> users = userRepository.findWithFilters(null, true, null, departmentId, Pageable.unpaged()).getContent();
+        List<User> users = userRepository.findWithFilters(null, true, null, departmentId, Pageable.unpaged())
+                .getContent();
         return users.stream()
                 .map(user -> UserListDTO.builder()
                         .id(user.getId())
@@ -574,6 +577,7 @@ public class UserManagementServiceImpl implements UserManagementService {
                         .build())
                 .collect(Collectors.toList());
     }
+
     @Override
     @Transactional
     public Map<String, Object> importCitizensFromCsv(MultipartFile file) throws IOException {
@@ -594,7 +598,8 @@ public class UserManagementServiceImpl implements UserManagementService {
 
             // 2. Read first line as header
             String headerLine = reader.readLine();
-            if (headerLine == null) throw new RuntimeException("File CSV rỗng!");
+            if (headerLine == null)
+                throw new RuntimeException("File CSV rỗng!");
 
             // 3. Validate header (theo cấu trúc Entity Citizen)
             String expectedHeader = "fullName,dob,gender,nationalId,address,phone,email";
@@ -606,7 +611,8 @@ public class UserManagementServiceImpl implements UserManagementService {
             String line;
             while ((line = reader.readLine()) != null) {
                 rowNumber++;
-                if (line.trim().isEmpty()) continue;
+                if (line.trim().isEmpty())
+                    continue;
                 totalRows++;
 
                 try {
@@ -657,7 +663,8 @@ public class UserManagementServiceImpl implements UserManagementService {
                     try {
                         gender = Gender.valueOf(genderStr);
                     } catch (IllegalArgumentException e) {
-                        errors.add("Dòng " + rowNumber + ": Giới tính '" + genderStr + "' không hợp lệ (MALE/FEMALE/OTHER)");
+                        errors.add("Dòng " + rowNumber + ": Giới tính '" + genderStr
+                                + "' không hợp lệ (MALE/FEMALE/OTHER)");
                         continue;
                     }
 
@@ -693,6 +700,7 @@ public class UserManagementServiceImpl implements UserManagementService {
 
         return response;
     }
+
     @Override
     public void exportApplicationsToCsv(Writer writer, org.springframework.security.core.Authentication authentication) {
         try {
@@ -751,10 +759,11 @@ public class UserManagementServiceImpl implements UserManagementService {
                     String citizenName = (app.getCitizen() != null) ? app.getCitizen().getFullName() : "N/A";
                     String submittedAt = (app.getSubmittedAt() != null) ? app.getSubmittedAt().format(formatter) : "";
                     String note = app.getNote() != null ? app.getNote() : "";
-                    String procTime = (app.getService() != null) ? String.valueOf(app.getService().getProcessingTime()) : "0";
+                    String procTime = (app.getService() != null) ? String.valueOf(app.getService().getProcessingTime())
+                            : "0";
 
                     // Ghi dòng dữ liệu vào CSV
-                    csvWriter.writeNext(new String[]{
+                    csvWriter.writeNext(new String[] {
                             appCode,
                             serviceName,
                             citizenName,
@@ -769,6 +778,7 @@ public class UserManagementServiceImpl implements UserManagementService {
             throw new RuntimeException("Lỗi khi xuất CSV Application: " + e.getMessage(), e);
         }
     }
+
     @Override
     public void exportCitizensToCsv(Writer writer) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -778,7 +788,8 @@ public class UserManagementServiceImpl implements UserManagementService {
 
             // 2. Khởi tạo CSVWriter sau khi đã ghi BOM
             try (CSVWriter csvWriter = new CSVWriter(writer)) {
-                String[] header = {"ID", "Full Name", "DOB", "Gender", "National ID", "Phone", "Email", "Total Applications"};
+                String[] header = { "ID", "Full Name", "DOB", "Gender", "National ID", "Phone", "Email",
+                        "Total Applications" };
                 csvWriter.writeNext(header);
 
                 // 3. Lấy dữ liệu (Nếu dữ liệu cực lớn, nên dùng Pageable hoặc Stream)
@@ -801,7 +812,7 @@ public class UserManagementServiceImpl implements UserManagementService {
                         totalApps = "N/A";
                     }
 
-                    csvWriter.writeNext(new String[]{
+                    csvWriter.writeNext(new String[] {
                             String.valueOf(c.getId()),
                             c.getFullName() != null ? c.getFullName() : "",
                             dobStr,
@@ -816,5 +827,10 @@ public class UserManagementServiceImpl implements UserManagementService {
         } catch (Exception e) {
             throw new RuntimeException("Error exporting Citizens to CSV: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public User getByUsername(String username) {
+        return userRepository.findByUsername(username).orElse(null);
     }
 }
