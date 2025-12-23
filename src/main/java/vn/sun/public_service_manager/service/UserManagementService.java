@@ -87,6 +87,9 @@ public interface UserManagementService {
 
     void exportCitizensToCsv(Writer writer);
 
+<<<<<<< Updated upstream
     void exportApplicationsToCsv(Writer writer, org.springframework.security.core.Authentication authentication);
+=======
+>>>>>>> Stashed changes
     public Map<String, Object> importCitizensFromCsv(MultipartFile file) throws IOException;
 }

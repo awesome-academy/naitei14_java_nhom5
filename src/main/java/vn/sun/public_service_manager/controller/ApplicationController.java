@@ -1,13 +1,18 @@
 package vn.sun.public_service_manager.controller;
 
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +32,7 @@ import vn.sun.public_service_manager.exception.FileException;
 import vn.sun.public_service_manager.service.ApplicationService;
 import vn.sun.public_service_manager.service.CitizenService;
 import vn.sun.public_service_manager.service.EmailService;
+import vn.sun.public_service_manager.service.UserManagementService;
 import vn.sun.public_service_manager.utils.FileUtil;
 import vn.sun.public_service_manager.utils.SecurityUtil;
 import vn.sun.public_service_manager.utils.annotation.ApiMessage;
@@ -144,6 +150,28 @@ public class ApplicationController {
         response.setApplicationId("Application ID: " + applicationId);
         response.setUploadedAt(java.time.LocalDateTime.now());
         return ResponseEntity.ok(response);
+    }
+    @GetMapping("/export-applications")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @ApiMessage("Xuất danh sách hồ sơ ra file CSV thành công")
+    public void exportApplicationsToCsv(HttpServletResponse response) {
+        try {
+            response.setContentType("text/csv; charset=UTF-8");
+            response.setCharacterEncoding("UTF-8");
+            response.setHeader("Content-Disposition",
+                    "attachment; filename=\"application_list_" + System.currentTimeMillis() + ".csv\"");
+
+            // Ghi BOM UTF-8
+            response.getOutputStream().write(0xEF);
+            response.getOutputStream().write(0xBB);
+            response.getOutputStream().write(0xBF);
+
+            Writer writer = new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8);
+            applicationService.exportApplicationsToCsv(writer);
+            writer.flush();
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi khi xuất file CSV Hồ sơ", e);
+        }
     }
 
 }

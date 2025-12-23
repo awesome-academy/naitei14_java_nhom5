@@ -13,6 +13,8 @@ import vn.sun.public_service_manager.dto.response.ApplicationResApiDTO;
 import vn.sun.public_service_manager.dto.response.ApplicationResDTO;
 import vn.sun.public_service_manager.entity.Application;
 
+import java.io.Writer;
+
 public interface ApplicationService {
 
     Application createApplication(Long serviceId, String note, MultipartFile[] files);
@@ -35,4 +37,5 @@ public interface ApplicationService {
             String keyword);
 
     ApplicationResApiDTO getApplicationDetail(Long id, Long citizenId);
+    void exportApplicationsToCsv(Writer writer);
 }

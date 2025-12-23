@@ -106,4 +106,5 @@ public class CitizenWebController {
         return "redirect:/admin/citizens";
     }
 
+
 }

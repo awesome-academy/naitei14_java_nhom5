@@ -34,7 +34,7 @@ public class ServicePublicController {
                 page, size, sortBy, sortDir, keyword, serviceTypeId);
 
         model.addAttribute("servicePage", servicePage);
-        model.addAttribute("serviceTypes", serviceTypeService.getAllServiceTypes()); // Danh sách cho Lọc
+        model.addAttribute("serviceTypes", serviceTypeService.getAllServiceTypes());
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", servicePage.getTotalPages());
         model.addAttribute("totalItems", servicePage.getTotalElements());
