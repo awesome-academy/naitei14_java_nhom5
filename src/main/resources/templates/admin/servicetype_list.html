@@ -43,6 +43,7 @@
                                             <th>ID</th>
                                             <th>Category</th>
                                             <th>Mô tả</th>
+                                            <th>Phòng ban</th>
                                             <th>Hành động</th>
                                         </tr>
                                     </thead>
@@ -50,13 +51,13 @@
                                         <tr th:each="type : ${serviceTypes}">
                                             <td th:text="${type.id}"></td>
                                             <td>
-                                                <a th:href="@{/admin/services(serviceTypeId=${type.id})}" 
-                                                   class="text-decoration-none fw-bold text-primary"
-                                                   th:text="${type.category}"
-                                                   title="Xem danh sách dịch vụ">
+                                                <a th:href="@{/admin/services(serviceTypeId=${type.id})}"
+                                                    class="text-decoration-none fw-bold text-primary"
+                                                    th:text="${type.category}" title="Xem danh sách dịch vụ">
                                                 </a>
                                             </td>
                                             <td th:text="${type.description}"></td>
+                                            <td th:text="${type.department.name}"></td>
                                             <td>
                                                 <a th:href="@{/admin/servicetypes/edit/{id}(id=${type.id})}"
                                                     class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
