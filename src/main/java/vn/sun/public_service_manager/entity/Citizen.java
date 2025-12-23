@@ -28,11 +28,9 @@ public class Citizen {
     private String fullName;
 
     @Column(name = "dob", nullable = false)
-    // @Temporal(TemporalType.DATE)
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date dob;// Date of birth
 
-    // Ánh xạ kiểu ENUM của MySQL sang Java Enum
     @Enumerated(EnumType.STRING)
     @Column(name = "gender", nullable = false, length = 10)
     private Gender gender;
@@ -58,6 +56,8 @@ public class Citizen {
     @Column(name = "password", nullable = false, length = 255)
     private String password; // Mật khẩu đã được mã hóa
 
+    private boolean active;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
@@ -68,4 +68,11 @@ public class Citizen {
 
     @OneToMany(mappedBy = "citizen", fetch = FetchType.LAZY)
     private List<Application> applications;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = new Date();
+        active = true;
+    }
+
 }

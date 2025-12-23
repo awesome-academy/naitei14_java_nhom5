@@ -5,9 +5,11 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import jakarta.transaction.Transactional;
 import vn.sun.public_service_manager.entity.Citizen;
 
 public interface CitizenRepository extends JpaRepository<Citizen, Long> {
@@ -33,4 +35,8 @@ public interface CitizenRepository extends JpaRepository<Citizen, Long> {
                         "OR LOWER(c.nationalId) LIKE LOWER(CONCAT('%', :search, '%'))")
         Page<Citizen> findWithSearch(@Param("search") String search, Pageable pageable);
 
+        @Modifying
+        @Transactional
+        @Query("UPDATE Citizen c SET c.active = NOT c.active WHERE c.id = :id")
+        int toggleActiveById(@Param("id") Long id);
 }

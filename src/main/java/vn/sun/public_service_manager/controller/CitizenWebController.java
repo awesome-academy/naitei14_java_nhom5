@@ -1,6 +1,7 @@
 package vn.sun.public_service_manager.controller;
 
 import org.springframework.data.domain.Page;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -95,16 +96,14 @@ public class CitizenWebController {
         return "citizen/citizen_form";
     }
 
-    @GetMapping("/{id}/delete")
+    @GetMapping("/{id}/toggle")
     public String delete(@PathVariable Long id, RedirectAttributes ra) {
         try {
             citizenService.deleteById(id);
-            ra.addFlashAttribute("message", "Xóa công dân thành công!");
+            ra.addFlashAttribute("message", "Cập nhật trạng thái công dân thành công!");
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/admin/citizens";
     }
-
-
 }
