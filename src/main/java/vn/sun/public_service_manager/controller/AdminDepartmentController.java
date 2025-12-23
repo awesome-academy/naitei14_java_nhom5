@@ -4,6 +4,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -200,8 +201,24 @@ public class AdminDepartmentController {
         }
 
         try {
-            departmentService.importDepartmentsFromCsv(file);
-            redirectAttributes.addFlashAttribute("successMessage", "Nhập file CSV thành công!");
+            Map<String, Object> result = departmentService.importDepartmentsFromCsv(file);
+            int success = (int) result.get("success");
+            int skipped = (int) result.get("skipped");
+            @SuppressWarnings("unchecked")
+            List<String> errors = (List<String>) result.get("errors");
+            
+            if (success > 0) {
+                redirectAttributes.addFlashAttribute("successMessage", 
+                    "Import thành công " + success + " phòng ban" + 
+                    (skipped > 0 ? ", bỏ qua " + skipped + " mã trùng" : ""));
+            }
+            
+            if (!errors.isEmpty()) {
+                redirectAttributes.addFlashAttribute("importErrors", errors);
+                if (success == 0) {
+                    redirectAttributes.addFlashAttribute("errorMessage", "Import thất bại!");
+                }
+            }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
         }

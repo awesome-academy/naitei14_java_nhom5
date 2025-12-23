@@ -34,6 +34,9 @@
                             <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#createDepartmentModal">
                                 <i class="bi bi-plus-circle"></i> Thêm phòng ban
                             </button>
+                            <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
+                                <i class="bi bi-upload"></i> Import CSV
+                            </button>
                             <a th:href="@{/admin/departments/export}" class="btn btn-light btn-sm">
                                 <i class="bi bi-download"></i> Export CSV
                             </a>
@@ -83,8 +86,12 @@
                                         <td th:text="${dept.leader != null ? dept.leader.username : 'Chưa có'}"></td>
                                         <td th:text="${dept.address}"></td>
                                         <td>
-                                            <button class="btn btn-sm btn-outline-primary" 
-                                                    th:onclick="|editDepartment(${dept.id})|"
+                                            <button class="btn btn-sm btn-outline-primary btn-edit-dept" 
+                                                    th:data-id="${dept.id}"
+                                                    th:data-code="${dept.code}"
+                                                    th:data-name="${dept.name}"
+                                                    th:data-address="${dept.address ?: ''}"
+                                                    th:data-leader-id="${dept.leader != null ? dept.leader.id : ''}"
                                                     title="Chỉnh sửa">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
@@ -175,6 +182,36 @@
         </div>
     </div>
 
+    <!-- Import CSV Modal -->
+    <div class="modal fade" id="importModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Import phòng ban từ CSV</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/admin/departments/import}" method="post" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> File CSV cần có 3 cột: <strong>code, name, address</strong>
+                            <br>Nếu mã phòng ban đã tồn tại, bản ghi sẽ bị bỏ qua.
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Chọn file CSV</label>
+                            <input type="file" class="form-control" name="file" accept=".csv" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-upload"></i> Import
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Edit Department -->
     <div class="modal fade" id="editDepartmentModal" tabindex="-1">
         <div class="modal-dialog">
@@ -229,28 +266,30 @@
     <!-- Bootstrap JS -->
     <script th:src="@{/webjars/bootstrap/5.3.0/js/bootstrap.bundle.min.js}"></script>
     
-    <script th:inline="javascript">
-        /*<![CDATA[*/
-        function editDepartment(id) {
-            // Find department data from table
-            const departments = /*[[${departments}]]*/ [];
-            const dept = departments.find(d => d.id === id);
-            
-            if (dept) {
-                document.getElementById('editDeptId').value = dept.id;
-                document.getElementById('editCode').value = dept.code;
-                document.getElementById('editName').value = dept.name;
-                document.getElementById('editAddress').value = dept.address || '';
-                document.getElementById('editLeaderId').value = dept.leader ? dept.leader.id : '';
-                
-                // Set form action
-                document.getElementById('editDepartmentForm').action = `/admin/departments/${id}/update`;
-                
-                // Show modal
-                new bootstrap.Modal(document.getElementById('editDepartmentModal')).show();
-            }
-        }
-        /*]]>*/
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Edit department buttons
+            document.querySelectorAll('.btn-edit-dept').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    const code = this.getAttribute('data-code');
+                    const name = this.getAttribute('data-name');
+                    const address = this.getAttribute('data-address');
+                    const leaderId = this.getAttribute('data-leader-id');
+                    
+                    document.getElementById('editDeptId').value = id;
+                    document.getElementById('editCode').value = code;
+                    document.getElementById('editName').value = name;
+                    document.getElementById('editAddress').value = address || '';
+                    document.getElementById('editLeaderId').value = leaderId || '';
+                    
+                    document.getElementById('editDepartmentForm').action = '/admin/departments/' + id + '/update';
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('editDepartmentModal'));
+                    modal.show();
+                });
+            });
+        });
     </script>
 </body>
 

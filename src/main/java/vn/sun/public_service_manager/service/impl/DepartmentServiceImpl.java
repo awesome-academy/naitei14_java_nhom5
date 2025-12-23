@@ -7,6 +7,7 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,7 +15,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
 import vn.sun.public_service_manager.entity.Department;
-import vn.sun.public_service_manager.entity.User;
 import vn.sun.public_service_manager.repository.DepartmentRepository;
 import vn.sun.public_service_manager.repository.UserRespository;
 import vn.sun.public_service_manager.service.DepartmentService;
@@ -56,9 +56,11 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     @Transactional
-    public void importDepartmentsFromCsv(MultipartFile file) throws IOException {
+    public Map<String, Object> importDepartmentsFromCsv(MultipartFile file) throws IOException {
         List<String> errors = new ArrayList<>();
+        List<String> success = new ArrayList<>();
         int rowNumber = 0;
+        int skipped = 0;
 
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
@@ -76,9 +78,11 @@ public class DepartmentServiceImpl implements DepartmentService {
             }
 
             // Validate header
-            String expectedHeader = "code,name,address";
-            if (!headerLine.toLowerCase().startsWith(expectedHeader.toLowerCase())) {
-                throw new RuntimeException("File CSV không đúng định dạng! Cần có: " + expectedHeader);
+            String[] headers = headerLine.split(",");
+            if (headers.length < 3 || !headers[0].trim().equalsIgnoreCase("code") 
+                || !headers[1].trim().equalsIgnoreCase("name")
+                || !headers[2].trim().equalsIgnoreCase("address")) {
+                throw new RuntimeException("File CSV không đúng định dạng! Cần có: code,name,address");
             }
 
             // Read data lines
@@ -91,7 +95,7 @@ public class DepartmentServiceImpl implements DepartmentService {
                 }
 
                 try {
-                    String[] values = parseCSVLine(line);
+                    String[] values = line.split(",");
 
                     if (values.length < 3) {
                         errors.add("Dòng " + rowNumber + ": Thiếu dữ liệu (code, name, address)");
@@ -108,9 +112,9 @@ public class DepartmentServiceImpl implements DepartmentService {
                         continue;
                     }
 
-                    // Check duplicate code
+                    // Skip if code already exists
                     if (departmentRepository.existsByCode(code)) {
-                        errors.add("Dòng " + rowNumber + ": Mã phòng ban '" + code + "' đã tồn tại");
+                        skipped++;
                         continue;
                     }
 
@@ -120,8 +124,8 @@ public class DepartmentServiceImpl implements DepartmentService {
                     department.setName(name);
                     department.setAddress(address);
 
-                    // Leader can be set later through UI
                     departmentRepository.save(department);
+                    success.add("Dòng " + rowNumber + ": Tạo phòng ban '" + name + "' thành công");
 
                 } catch (Exception e) {
                     errors.add("Dòng " + rowNumber + ": " + e.getMessage());
@@ -132,9 +136,14 @@ public class DepartmentServiceImpl implements DepartmentService {
             throw new RuntimeException("Lỗi khi đọc file CSV: " + e.getMessage(), e);
         }
 
-        if (!errors.isEmpty()) {
-            throw new RuntimeException("Import có lỗi: " + String.join("; ", errors));
-        }
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("totalRows", rowNumber);
+        result.put("success", success.size());
+        result.put("skipped", skipped);
+        result.put("errors", errors);
+        result.put("successMessages", success);
+
+        return result;
     }
 
     private String[] parseCSVLine(String line) {
