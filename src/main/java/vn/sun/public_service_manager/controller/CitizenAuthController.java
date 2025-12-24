@@ -1,5 +1,11 @@
 package vn.sun.public_service_manager.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -29,7 +35,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/citizen/auth")
-@Tag(name = "Citizen Auth", description = "Xác thực công dân: Đăng ký, Đăng nhập, Đăng xuất")
+@Tag(name = "Citizen Auth", description = "APIs xác thực công dân (không cần đăng nhập)")
 public class CitizenAuthController {
 
         @Autowired
@@ -47,7 +53,48 @@ public class CitizenAuthController {
 
         // 1. API Đăng ký
         @PostMapping("/register")
+        @Operation(
+                summary = "Đăng ký tài khoản công dân mới",
+                description = "Tạo tài khoản công dân mới với thông tin cá nhân. CMND/CCCD, email và số điện thoại phải là duy nhất.")
+        @ApiResponses(value = {
+                @ApiResponse(responseCode = "201", description = "Đăng ký thành công",
+                        content = @Content(mediaType = "application/json",
+                                examples = @ExampleObject(value = """
+                                {
+                                  "citizen": {
+                                    "nationalId": "123456789012",
+                                    "fullName": "Nguyễn Văn A",
+                                    "email": "nguyenvana@example.com"
+                                  }
+                                }
+                                """))),
+                @ApiResponse(responseCode = "400", description = "CMND/CCCD hoặc email đã tồn tại",
+                        content = @Content(mediaType = "application/json",
+                                examples = @ExampleObject(value = """
+                                {
+                                  "success": false,
+                                  "message": "CMND/CCCD đã tồn tại trong hệ thống",
+                                  "field": "nationalId"
+                                }
+                                """)))
+        })
         public ResponseEntity<Map<String, Object>> registerCitizen(
+                        @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                                description = "Thông tin đăng ký công dân",
+                                required = true,
+                                content = @Content(schema = @Schema(implementation = CitizenRegistrationDto.class),
+                                        examples = @ExampleObject(value = """
+                                        {
+                                          "nationalId": "123456789012",
+                                          "fullName": "Nguyễn Văn A",
+                                          "dob": "1990-01-01",
+                                          "gender": "Nam",
+                                          "address": "123 Đường ABC, Quận 1, TP.HCM",
+                                          "phone": "0901234567",
+                                          "email": "nguyenvana@example.com",
+                                          "password": "Password123!"
+                                        }
+                                        """)))
                         @RequestBody @Valid CitizenRegistrationDto registrationDto) {
                 if (citizenRepository.existsByNationalId(registrationDto.getNationalId())) {
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -91,7 +138,33 @@ public class CitizenAuthController {
         @PostMapping("/login")
         @LogActivity(action = "Citizen Login", targetType = "CITIZEN AUTH", description = "Đăng nhập hệ thống công dân")
         @ApiMessage("Đăng nhập thành công")
-        public ResponseEntity<?> login(@RequestBody @Valid LoginDto loginDto) {
+        @Operation(
+                summary = "Đăng nhập hệ thống",
+                description = "Đăng nhập bằng CMND/CCCD và mật khẩu. Trả về JWT token để sử dụng cho các API khác.")
+        @ApiResponses(value = {
+                @ApiResponse(responseCode = "200", description = "Đăng nhập thành công, nhận được JWT token",
+                        content = @Content(mediaType = "application/json",
+                                schema = @Schema(implementation = JwtAuthResponse.class),
+                                examples = @ExampleObject(value = """
+                                {
+                                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                                }
+                                """))),
+                @ApiResponse(responseCode = "401", description = "Số định danh hoặc mật khẩu không chính xác"),
+                @ApiResponse(responseCode = "403", description = "Tài khoản đã bị khóa")
+        })
+        public ResponseEntity<?> login(
+                @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                        description = "Thông tin đăng nhập (CMND/CCCD và mật khẩu)",
+                        required = true,
+                        content = @Content(schema = @Schema(implementation = LoginDto.class),
+                                examples = @ExampleObject(value = """
+                                {
+                                  "nationalId": "123456789012",
+                                  "password": "Password123!"
+                                }
+                                """)))
+                @RequestBody @Valid LoginDto loginDto) {
                 try {
                         Authentication authentication = authenticationManager.authenticate(
                                         new UsernamePasswordAuthenticationToken(loginDto.getNationalId(),
@@ -112,6 +185,14 @@ public class CitizenAuthController {
         // 3. API Đăng xuất
         @LogActivity(action = "Citizen Logout", targetType = "CITIZEN AUTH", description = "Đăng xuất hệ thống công dân")
         @GetMapping("/logout")
+        @Operation(
+                summary = "Đăng xuất khỏi hệ thống",
+                description = "Hướng dẫn client xóa JWT token. Server-side không lưu trữ token.")
+        @ApiResponses(value = {
+                @ApiResponse(responseCode = "200", description = "Đăng xuất thành công",
+                        content = @Content(mediaType = "text/plain",
+                                examples = @ExampleObject(value = "Logout successful. Client must delete the JWT token.")))
+        })
         public ResponseEntity<String> logout() {
                 // Logout chỉ là hướng dẫn client xóa token.
                 return ResponseEntity.ok("Logout successful. Client must delete the JWT token.");

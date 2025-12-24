@@ -1,5 +1,12 @@
 package vn.sun.public_service_manager.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,12 +26,23 @@ import java.util.Map;
 @RequestMapping("admin/servicetypes")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ROLE_ADMIN')")
+@Tag(name = "Admin - Service Types", description = "APIs quản lý loại dịch vụ (Admin only)")
+@SecurityRequirement(name = "Bearer Authentication")
 public class ServiceTypeApiController {
 
     private final ServiceTypeService serviceTypeService;
 
     @GetMapping("/export")
     @ApiMessage("Xuất danh sách loại dịch vụ ra file CSV thành công")
+    @Operation(
+            summary = "Xuất loại dịch vụ ra CSV",
+            description = "Xuất toàn bộ danh sách loại dịch vụ ra file CSV")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Xuất file thành công",
+                    content = @Content(mediaType = "text/csv")),
+            @ApiResponse(responseCode = "401", description = "Chưa đăng nhập"),
+            @ApiResponse(responseCode = "403", description = "Không có quyền Admin")
+    })
     public void exportServiceTypesToCsv(HttpServletResponse response) {
         try {
             response.setContentType("text/csv; charset=UTF-8");
@@ -47,7 +65,17 @@ public class ServiceTypeApiController {
 
     @PostMapping("/import")
     @ApiMessage("Nhập danh sách loại dịch vụ từ file CSV thành công")
+    @Operation(
+            summary = "Import loại dịch vụ từ CSV",
+            description = "Import danh sách loại dịch vụ từ file CSV. File phải có định dạng chuẩn.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Import thành công"),
+            @ApiResponse(responseCode = "400", description = "File không hợp lệ hoặc sai định dạng"),
+            @ApiResponse(responseCode = "401", description = "Chưa đăng nhập"),
+            @ApiResponse(responseCode = "403", description = "Không có quyền Admin")
+    })
     public ResponseEntity<Map<String, Object>> importServiceTypesFromCsv(
+            @Parameter(description = "File CSV chứa danh sách loại dịch vụ", required = true)
             @RequestParam("file") MultipartFile file) {
 
         if (file.isEmpty()) {

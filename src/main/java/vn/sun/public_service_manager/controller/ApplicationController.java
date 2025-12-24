@@ -8,6 +8,11 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;
@@ -32,7 +37,6 @@ import vn.sun.public_service_manager.exception.FileException;
 import vn.sun.public_service_manager.service.ApplicationService;
 import vn.sun.public_service_manager.service.CitizenService;
 import vn.sun.public_service_manager.service.EmailService;
-import vn.sun.public_service_manager.service.UserManagementService;
 import vn.sun.public_service_manager.utils.FileUtil;
 import vn.sun.public_service_manager.utils.SecurityUtil;
 import vn.sun.public_service_manager.utils.annotation.ApiMessage;
@@ -40,6 +44,8 @@ import vn.sun.public_service_manager.utils.annotation.LogActivity;
 
 @RestController
 @RequestMapping("/api/v1/applications")
+@Tag(name = "Applications", description = "APIs quản lý hồ sơ dịch vụ công (yêu cầu JWT token)")
+@SecurityRequirement(name = "Bearer Authentication")
 public class ApplicationController {
 
     private final FileUtil fileUtil;
@@ -57,6 +63,14 @@ public class ApplicationController {
 
     @GetMapping
     @ApiMessage("Get all applications successfully")
+    @Operation(
+            summary = "Lấy danh sách hồ sơ của tôi",
+            description = "Lấy tất cả hồ sơ đã nộp của công dân đang đăng nhập với filter, search, phân trang và sắp xếp")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Thành công",
+                    content = @Content(schema = @Schema(implementation = ApplicationPageResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa đăng nhập")
+    })
     public ResponseEntity<ApplicationPageResponse> getAllApplications(
             @Parameter(description = "Số trang (bắt đầu từ 1)", example = "1") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "Số dịch vụ mỗi trang", example = "10") @RequestParam(defaultValue = "10") int size,
@@ -74,7 +88,19 @@ public class ApplicationController {
 
     @GetMapping("/{id}")
     @ApiMessage("Get application by ID successfully")
-    public ResponseEntity<ApplicationResApiDTO> getApplicationById(@PathVariable("id") Long id) {
+    @Operation(
+            summary = "Xem chi tiết hồ sơ",
+            description = "Lấy thông tin chi tiết của một hồ sơ cụ thể")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Thành công",
+                    content = @Content(schema = @Schema(implementation = ApplicationResApiDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Chưa đăng nhập"),
+            @ApiResponse(responseCode = "403", description = "Không có quyền truy cập hồ sơ này"),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy hồ sơ")
+    })
+    public ResponseEntity<ApplicationResApiDTO> getApplicationById(
+            @Parameter(description = "ID của hồ sơ", example = "1")
+            @PathVariable("id") Long id) {
         String nationalId = SecurityUtil.getCurrentUserName();
         Citizen citizen = citizenService.getByNationalId(nationalId);
         return ResponseEntity.ok(applicationService.getApplicationDetail(id, citizen.getId()));
@@ -83,11 +109,28 @@ public class ApplicationController {
     @LogActivity(action = "Upload hồ sơ", targetType = "APPLICATION", description = "Upload hồ sơ mới với file đính kèm")
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiMessage("Upload application with files successfully")
-    @Operation(summary = "Tạo hồ sơ mới với file đính kèm", description = "Upload file và thông tin hồ sơ. File hỗ trợ: pdf, doc, docx, jpg, png")
+    @Operation(
+            summary = "Nộp hồ sơ mới",
+            description = "Upload hồ sơ dịch vụ công mới kèm theo file đính kèm.\n\n" +
+                    "**File hỗ trợ:** pdf, doc, docx, jpg, png\n\n" +
+                    "**Kích thước tối đa:** 10MB/file\n\n" +
+                    "**Lưu ý:** Sau khi upload thành công, hệ thống sẽ gửi email xác nhận")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Upload thành công",
+                    content = @Content(schema = @Schema(implementation = FileResDTO.class))),
+            @ApiResponse(responseCode = "400", description = "File không hợp lệ hoặc quá kích thước"),
+            @ApiResponse(responseCode = "401", description = "Chưa đăng nhập"),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy dịch vụ")
+    })
     public ResponseEntity<FileResDTO> createApplication(
-            @Parameter(description = "ID dịch vụ", required = true, example = "1") @RequestParam("serviceId") Long serviceId,
-            @Parameter(description = "Ghi chú", required = true, example = "Hồ sơ cấp CMND mới") @RequestParam("note") String note,
-            @Parameter(description = "File đính kèm (pdf, doc, docx, jpg, png)", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)) @RequestPart(value = "files", required = false) MultipartFile[] files)
+            @Parameter(description = "ID dịch vụ cần nộp hồ sơ", required = true, example = "1")
+            @RequestParam("serviceId") Long serviceId,
+            @Parameter(description = "Ghi chú về hồ sơ", required = true, example = "Hồ sơ cấp CMND mới")
+            @RequestParam("note") String note,
+            @Parameter(
+                    description = "Danh sách file đính kèm (pdf, doc, docx, jpg, png). Có thể upload nhiều file cùng lúc.",
+                    content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
+            @RequestPart(value = "files", required = false) MultipartFile[] files)
             throws FileException {
 
         if (files == null || files.length == 0) {
@@ -128,11 +171,26 @@ public class ApplicationController {
     @LogActivity(action = "Bổ sung tài liệu", targetType = "APPLICATION", description = "Upload thêm tài liệu cho hồ sơ đã tồn tại")
     @PostMapping(value = "/upload-more", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiMessage("Upload more files to existing application successfully")
-    @Operation(summary = "Bổ sung tài liệu cho hồ sơ", description = "Upload thêm file cho hồ sơ đã tồn tại. File hỗ trợ: pdf, doc, docx, jpg, png")
+    @Operation(
+            summary = "Bổ sung tài liệu cho hồ sơ",
+            description = "Upload thêm file tài liệu cho hồ sơ đã tồn tại.\n\n" +
+                    "**File hỗ trợ:** pdf, doc, docx, jpg, png\n\n" +
+                    "**Kích thước tối đa:** 10MB/file")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Upload thành công",
+                    content = @Content(schema = @Schema(implementation = FileResDTO.class))),
+            @ApiResponse(responseCode = "400", description = "File không hợp lệ hoặc quá kích thước"),
+            @ApiResponse(responseCode = "401", description = "Chưa đăng nhập"),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy hồ sơ")
+    })
     public ResponseEntity<FileResDTO> uploadMoreFiles(
-            @Parameter(description = "ID hồ sơ", required = true, example = "1") @RequestParam("applicationId") Long applicationId,
+            @Parameter(description = "ID hồ sơ cần bổ sung tài liệu", required = true, example = "1")
+            @RequestParam("applicationId") Long applicationId,
 
-            @Parameter(description = "File đính kèm (pdf, doc, docx, jpg, png)", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)) @RequestPart("files") MultipartFile[] files)
+            @Parameter(
+                    description = "Danh sách file đính kèm bổ sung (pdf, doc, docx, jpg, png)",
+                    content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
+            @RequestPart("files") MultipartFile[] files)
             throws FileException {
 
         if (files == null || files.length == 0) {
@@ -156,6 +214,16 @@ public class ApplicationController {
     @GetMapping("/export-applications")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @ApiMessage("Xuất danh sách hồ sơ ra file CSV thành công")
+    @Operation(
+            summary = "Xuất danh sách hồ sơ ra CSV",
+            description = "Xuất toàn bộ danh sách hồ sơ ra file CSV. **Chỉ Admin và Manager được phép**")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Xuất file thành công",
+                    content = @Content(mediaType = "text/csv")),
+            @ApiResponse(responseCode = "401", description = "Chưa đăng nhập"),
+            @ApiResponse(responseCode = "403", description = "Không có quyền")
+    })
+    @SecurityRequirement(name = "Bearer Authentication")
     public void exportApplicationsToCsv(HttpServletResponse response) {
         try {
             response.setContentType("text/csv; charset=UTF-8");
