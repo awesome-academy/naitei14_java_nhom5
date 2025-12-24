@@ -1,18 +1,59 @@
 package vn.sun.public_service_manager.config;
 
-import java.util.List;
-
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.servers.Server;
+import org.springdoc.core.models.GroupedOpenApi;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
 
 @Configuration
 public class OpenApiConfig {
+
+    @Bean
+    public GroupedOpenApi citizenPublicApi() {
+        return GroupedOpenApi.builder()
+                .group("1. Citizen Public APIs")
+                .pathsToMatch("/api/v1/citizen/auth/**", "/api/v1/services/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi citizenProtectedApi() {
+        return GroupedOpenApi.builder()
+                .group("2. Citizen Protected APIs")
+                .pathsToMatch("/api/v1/citizen/**", "/api/citizen/**")
+                .pathsToExclude("/api/v1/citizen/auth/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi applicationApi() {
+        return GroupedOpenApi.builder()
+                .group("3. Application APIs")
+                .pathsToMatch("/api/v1/applications/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi notificationApi() {
+        return GroupedOpenApi.builder()
+                .group("4. Notification APIs")
+                .pathsToMatch("/api/v1/notifications/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi adminApi() {
+        return GroupedOpenApi.builder()
+                .group("5. Admin APIs")
+                .pathsToMatch("/admin/**")
+                .build();
+    }
 
     @Bean
     public OpenAPI customOpenAPI() {
@@ -86,10 +127,15 @@ public class OpenApiConfig {
                 .name("Authorization")
                 .description("Nhập JWT token sau khi đăng nhập. Hệ thống sẽ tự động thêm 'Bearer ' prefix nếu cần.");
 
+        io.swagger.v3.oas.models.security.SecurityRequirement securityRequirement = 
+                new io.swagger.v3.oas.models.security.SecurityRequirement()
+                .addList("Bearer Authentication");
+
         return new OpenAPI()
                 .info(info)
                 .servers(List.of(localServer))
                 .components(new io.swagger.v3.oas.models.Components()
-                        .addSecuritySchemes("Bearer Authentication", securityScheme));
+                        .addSecuritySchemes("Bearer Authentication", securityScheme))
+                .addSecurityItem(securityRequirement);
     }
 }

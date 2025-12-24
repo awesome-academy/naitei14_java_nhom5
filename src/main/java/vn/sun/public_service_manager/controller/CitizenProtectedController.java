@@ -1,15 +1,5 @@
 package vn.sun.public_service_manager.controller;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -18,13 +8,21 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import vn.sun.public_service_manager.dto.ChangePasswordRequest;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+
 import vn.sun.public_service_manager.dto.CitizenProfileResponse;
 import vn.sun.public_service_manager.dto.CitizenProfileUpdateRequest;
+import vn.sun.public_service_manager.dto.ChangePasswordRequest;
 import vn.sun.public_service_manager.service.ApplicationService;
 import vn.sun.public_service_manager.service.CitizenService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/citizen")
@@ -96,8 +94,29 @@ public class CitizenProtectedController {
 
     @PreAuthorize("hasRole('CITIZEN')")
     @PutMapping("/change-password")
+    @Operation(
+            summary = "Đổi mật khẩu",
+            description = "Thay đổi mật khẩu tài khoản. Yêu cầu nhập mật khẩu cũ để xác nhận.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Đổi mật khẩu thành công",
+                    content = @Content(mediaType = "text/plain",
+                            examples = @ExampleObject(value = "Mật khẩu đã được thay đổi thành công."))),
+            @ApiResponse(responseCode = "400", description = "Mật khẩu cũ không chính xác"),
+            @ApiResponse(responseCode = "401", description = "Chưa đăng nhập hoặc token không hợp lệ")
+    })
     public ResponseEntity<String> changePassword(
             @AuthenticationPrincipal UserDetails userDetails,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Mật khẩu cũ và mật khẩu mới",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = ChangePasswordRequest.class),
+                            examples = @ExampleObject(value = """
+                            {
+                              "oldPassword": "OldPassword123!",
+                              "newPassword": "NewPassword123!",
+                              "confirmPassword": "NewPassword123!"
+                            }
+                            """)))
             @Valid @RequestBody ChangePasswordRequest request) {
 
         String nationalId = getNationalId(userDetails);
